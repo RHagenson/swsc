@@ -93,7 +93,7 @@ func copyBlock(s *bufio.Scanner) []string {
 func processSetsBlock(nex *Nexus, lines []string) {
 	for _, line := range lines {
 		switch {
-		case strings.HasPrefix(strings.ToUpper(line), `CHARSET`):
+		case strings.HasPrefix(strings.ToUpper(line), "CHARSET"):
 			fields := strings.Fields(strings.TrimRight(line, ";"))
 			charsetName := fields[1]
 			for _, field := range fields {

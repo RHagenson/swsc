@@ -169,6 +169,7 @@ func processDataBlock(nex *Nexus, lines []string) {
 					nex.data.alignment[fields[0]] = fields[len(fields)-1]
 				}
 			}
+			break
 		}
 	}
 	return

@@ -2,19 +2,31 @@ package nexus
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
+)
+
+var (
+	// Example: DIMENSIONS NTAX=10 NCHAR=5786;
+	rgNtax  = regexp.MustCompile(`NTAX\s*=\s*(?P<ntax>\d+)`)
+	rgNchar = regexp.MustCompile(`NCHAR\s*=\s*(?P<nchar>\d+)`)
+
+	// Example: FORMAT DATATYPE=DNA GAP=- MISSING=?;
+	rgDatatype = regexp.MustCompile(`DATATYPE\s*=\s*(?P<datatype>.+)`)
+	rgGap      = regexp.MustCompile(`GAP\s*=\s*(?P<gap>.+)`)
+	rgMissing  = regexp.MustCompile(`MISSING\s*=\s*(?P<missing>.+)`)
 )
 
 // Nexus is an Only understands two blocks: DATA and SETS
 // meant for exclusive use in swsc
 type Nexus struct {
-	handlers map[string]func(*Nexus, []string)
+	handChan chan interface{}
+	handlers map[string]func(chan interface{}, []string)
 	data     *dataBlock
 	sets     *setsBlock
 }
@@ -46,16 +58,37 @@ func newPair(start, stop int) pair {
 	return pair{start: start, stop: stop}
 }
 
+func (nex *Nexus) mutator() {
+	for {
+		block := <-nex.handChan
+		switch block.(type) {
+		case *dataBlock:
+			nex.data = block.(*dataBlock)
+		case *setsBlock:
+			nex.sets = block.(*setsBlock)
+		case *struct{}:
+			return
+		}
+	}
+}
+
 // New creates a new empty Nexus with registered handlers and deferred block creation
 func New() *Nexus {
-	return &Nexus{
-		handlers: map[string]func(*Nexus, []string){
-			"data": processDataBlock,
-			"sets": processSetsBlock,
+	nex := &Nexus{
+		handChan: make(chan interface{}),
+		handlers: map[string]func(chan interface{}, []string){
+			"DATA": processDataBlock,
+			"SETS": processSetsBlock,
 		},
 		data: new(dataBlock),
 		sets: new(setsBlock),
 	}
+	go nex.mutator()
+	runtime.SetFinalizer(nex, func(nex *Nexus) {
+		nex.handChan <- new(struct{})
+		return
+	})
+	return nex
 }
 
 // Read fills in the Nexus with data from a file
@@ -64,18 +97,18 @@ func (nex *Nexus) Read(file io.Reader) {
 	for scanner.Scan() {
 		for k, f := range nex.handlers {
 			if blockByName(scanner.Text(), k) {
-				block := copyBlock(scanner)
-				go f(nex, block)
+				lines := copyLines(scanner)
+				go f(nex.handChan, lines)
 			} else {
-				log.Printf("Could not handle block %q", k)
+				log.Printf("Could not handle block %q\n", k)
 			}
 		}
 	}
 }
 
-// copyBlock extracts the lines between "BEGIN <block name>;" and "END;", trimming whitespace in the process
+// copyLines extracts the lines between "BEGIN <block name>;" and "END;", trimming whitespace in the process
 // The scanner should be at the BEGIN line and will be on the END line upon return
-func copyBlock(s *bufio.Scanner) []string {
+func copyLines(s *bufio.Scanner) []string {
 	lines := make([]string, 0)
 	for s.Scan() {
 		if strings.HasPrefix(strings.ToUpper(s.Text()), "END;") {
@@ -86,88 +119,80 @@ func copyBlock(s *bufio.Scanner) []string {
 	return lines
 }
 
-func processSetsBlock(nex *Nexus, lines []string) {
-	for _, line := range lines {
-		switch {
-		case strings.HasPrefix(strings.ToUpper(line), "CHARSET"):
-			fields := strings.Fields(strings.TrimRight(line, ";"))
-			charsetName := fields[1]
-			for _, field := range fields {
-				if strings.Contains(field, "-") {
-					split := strings.Split(field, "-")
-					start, _ := strconv.Atoi(split[0])
-					stop, _ := strconv.Atoi(split[1])
-					nex.sets.charSets[charsetName] = append(
-						nex.sets.charSets[charsetName],
-						newPair(start, stop),
-					)
-				} else if matched, err := regexp.MatchString(`[0-9]+`, field); matched && err == nil {
-					val, _ := strconv.Atoi(field)
-					nex.sets.charSets[charsetName] = append(
-						nex.sets.charSets[charsetName],
-						newPair(val, val),
-					)
+func processSetsBlock(c chan interface{}, lines []string) {
+	block := new(setsBlock)
+	for i := 0; i < len(lines); i++ {
+		fields := strings.Fields(strings.ToUpper(lines[i]))
+		if len(fields) != 0 {
+			switch fields[0] {
+			case "CHARSET":
+				charsetName := fields[1]
+				for _, field := range fields[2:] {
+					setVal := strings.TrimRight(field, ";")
+					if strings.Contains(setVal, "-") {
+						split := strings.Split(setVal, "-")
+						start, _ := strconv.Atoi(split[0])
+						stop, _ := strconv.Atoi(split[1])
+						block.charSets[charsetName] = append(
+							block.charSets[charsetName],
+							newPair(start, stop),
+						)
+					} else if matched, err := regexp.MatchString(`[0-9]+`, setVal); matched && err == nil {
+						val, _ := strconv.Atoi(setVal)
+						block.charSets[charsetName] = append(
+							block.charSets[charsetName],
+							newPair(val, val),
+						)
+					}
 				}
-			}
-		case strings.HasPrefix(strings.ToUpper(line), "CHARPARTITION"):
-			fields := strings.Fields(strings.TrimRight(line, ";"))
-			partitionName := fields[1]
-			for _, field := range fields {
-				if strings.Contains(field, ":") {
-					split := strings.Split(field, ":")
-					subsetName := split[0]
-					charSet := split[len(split)-1]
-					nex.sets.charPartition[partitionName][subsetName] = charSet
+			case "CHARPARTITION":
+				partitionName := fields[1]
+				for _, field := range fields {
+					entry := strings.TrimRight(field, ";")
+					if strings.Contains(entry, ":") {
+						split := strings.Split(entry, ":")
+						subsetName := split[0]
+						charSet := split[len(split)-1]
+						block.charPartition[partitionName][subsetName] = charSet
+					}
 				}
+			default:
+				log.Printf("Did not understand\n\t%s\nin SETS block\n", lines[i])
 			}
-		default:
-			fmt.Printf("Did not understand\n\t%s\nin SETS block", line)
 		}
 	}
+	c <- block
 	return
 }
 
-func processDataBlock(nex *Nexus, lines []string) {
-	var (
-		// Example: DIMENSIONS NTAX=10 NCHAR=5786;
-		regexDims = regexp.MustCompile(`^DIMENSIONS\s+NTAX\s*=\s*(?P<ntax>\d+)\s+NCHAR\s*=\s*(?P<nchar>\d+);$`)
-
-		// Example: FORMAT DATATYPE=DNA GAP=- MISSING=?;
-		regexFormat = regexp.MustCompile(`^FORMAT\s+DATATYPE\s*=\s*(?P<datatype>.+)\s+GAP\s*=\s*(?P<gap>.+)\s+MISSING\s*=\s*(?P<missing>.+);$`)
-	)
-
-	for i, line := range lines {
-		if matches := regexDims.FindStringSubmatch(strings.ToUpper(line)); matches != nil {
-			result := make(map[string]string)
-			for i, name := range regexDims.SubexpNames() {
-				if name != "" && i != 0 {
-					result[name] = matches[i]
+func processDataBlock(c chan interface{}, lines []string) {
+	block := new(dataBlock)
+	for i := 0; i < len(lines); i++ {
+		fields := strings.Fields(strings.ToUpper(lines[i]))
+		if len(fields) != 0 {
+			switch fields[0] {
+			case "DIMENSIONS":
+				block.ntax, _ = strconv.Atoi(rgNtax.FindString(strings.ToUpper(lines[i])))
+				block.nchar, _ = strconv.Atoi(rgNchar.FindString(strings.ToUpper(lines[i])))
+			case "FORMAT":
+				block.dataType = rgDatatype.FindString(strings.ToUpper(lines[i]))
+				block.gap = rgGap.FindString(strings.ToUpper(lines[i]))[0]
+				block.missing = rgMissing.FindString(strings.ToUpper(lines[i]))[0]
+			case "MATRIX":
+				for j, seqlin := range lines[i+1:] {
+					if fields := strings.Fields(seqlin); len(fields) == 2 {
+						block.alignment[fields[0]] = fields[1]
+					} else if strings.Contains(seqlin, ";") {
+						i = j
+						break
+					}
 				}
+			default:
+				log.Printf("Did not understand\n\t%s\nin DATA block\n", lines[i])
 			}
-			nex.data.ntax, _ = strconv.Atoi(result["ntax"])
-			nex.data.nchar, _ = strconv.Atoi(result["nchar"])
-		} else if matches := regexFormat.FindStringSubmatch(strings.ToUpper(line)); matches != nil {
-			result := make(map[string]string)
-			for i, name := range regexFormat.SubexpNames() {
-				if name != "" && i != 0 {
-					result[name] = matches[i]
-				}
-			}
-			nex.data.dataType = result["datatype"]
-			nex.data.gap = result["gap"][0]
-			nex.data.missing = result["missing"][0]
-		} else if strings.Contains(line, "MATRIX") {
-			for _, seqlin := range lines[i+1:] {
-				if len(seqlin) < 5 { // Heuristic to ignore non-sequence lines
-					continue
-				} else {
-					fields := strings.Fields(strings.TrimSpace(seqlin))
-					nex.data.alignment[fields[0]] = fields[len(fields)-1]
-				}
-			}
-			break
 		}
 	}
+	c <- block
 	return
 }
 

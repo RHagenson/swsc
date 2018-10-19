@@ -18,8 +18,8 @@ var (
 
 	// Example: FORMAT DATATYPE=DNA GAP=- MISSING=?;
 	rgDatatype = regexp.MustCompile(`DATATYPE\s*=\s*(?P<datatype>.+)`)
-	rgGap      = regexp.MustCompile(`GAP\s*=\s*(?P<gap>.+)`)
-	rgMissing  = regexp.MustCompile(`MISSING\s*=\s*(?P<missing>.+)`)
+	rgGap      = regexp.MustCompile(`GAP\s*=\s*(?P<gap>.)`)
+	rgMissing  = regexp.MustCompile(`MISSING\s*=\s*(?P<missing>.)`)
 )
 
 // Nexus is an Only understands two blocks: DATA and SETS

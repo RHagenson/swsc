@@ -55,12 +55,6 @@ func main() {
 	printFooter(*write, len(partitions))
 }
 
-// printHeader informs the user what work is being performed
-func printHeader(f string) {
-	fmt.Println()
-	fmt.Printf("Analysing %s\n", path.Base(f))
-}
-
 // writeOutput handles writing data to a specified file
 func writeOutput(f string, d [][]string) {
 	header := []string{
@@ -87,19 +81,13 @@ func writeOutput(f string, d [][]string) {
 // using a minimum sliding window size
 func processDatasetMetrics(f string, props []int8, win int) [][]string {
 	file, err := os.Open(f)
+	defer file.Close()
 	if err != nil {
 		log.Fatalf("Could not read file: %s", err)
 	}
 
 	data := nexus.New()
-	data.Read(f)
-	aln := new(alignio).Read(f, alignIONexus)
+	data.Read(file)
 
 	return make([][]string, 0)
-}
-
-// printFooter informs the user of what work was just performed with helpful metrics
-func printFooter(f string, l int) {
-	fmt.Println()
-	fmt.Printf("Wrote %d partitions to %s\n", l, f)
 }

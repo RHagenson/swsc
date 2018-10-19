@@ -3,6 +3,7 @@ package nexus
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"regexp"
@@ -58,12 +59,7 @@ func New() *Nexus {
 }
 
 // Read fills in the Nexus with data from a file
-func (nex *Nexus) Read(f string) {
-	file, err := os.Open(f)
-	defer file.Close()
-	if err != nil {
-		log.Fatalf("Could not process file: %s", err)
-	}
+func (nex *Nexus) Read(file io.Reader) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		for k, f := range nex.handlers {

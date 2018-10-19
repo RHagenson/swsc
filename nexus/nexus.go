@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"io"
 	"log"
-	"os"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -100,7 +99,7 @@ func (nex *Nexus) Read(file io.Reader) {
 				lines := copyLines(scanner)
 				go f(nex.handChan, lines)
 			} else {
-				log.Printf("Could not handle block %q\n", k)
+				log.Printf("Ignored line:\n\t%q\n", k)
 			}
 		}
 	}
@@ -199,4 +198,3 @@ func processDataBlock(c chan interface{}, lines []string) {
 func blockByName(s, b string) bool {
 	return strings.HasSuffix(strings.ToUpper(s), strings.ToUpper(" "+b+";"))
 }
-

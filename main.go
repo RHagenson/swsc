@@ -91,7 +91,8 @@ func processDatasetMetrics(f string, props []int8, win int) [][]string {
 		log.Fatalf("Could not read file: %s", err)
 	}
 
-	data := nexus.New().Read(f)
+	data := nexus.New()
+	data.Read(f)
 	aln := new(alignio).Read(f, alignIONexus)
 
 	return make([][]string, 0)

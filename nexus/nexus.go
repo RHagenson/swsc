@@ -25,11 +25,10 @@ var (
 // Nexus is an Only understands two blocks: DATA and SETS
 // meant for exclusive use in swsc
 type Nexus struct {
-	handChan    chan interface{}
-	handlers    map[string]func(chan interface{}, []string)
-	spawnedProc uint
-	data        *dataBlock
-	sets        *setsBlock
+	handChan chan interface{}
+	handlers map[string]func(chan interface{}, []string)
+	data     *dataBlock
+	sets     *setsBlock
 }
 
 type dataBlock struct {

@@ -36,7 +36,7 @@ BEGIN SETS;
     CHARSET chr_4312 = 377-627;
     ...
 
-     CHARPARTITION loci = 1:chr_2828, 2:chr_4312;
+    CHARPARTITION loci = 1:chr_2828, 2:chr_4312...;
 
 END;
 ```

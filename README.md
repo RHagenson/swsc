@@ -1,6 +1,6 @@
 # swsc
 
-`swsc` implements the Sliding-Window Site Characteristics (SWSC) method as described in https://doi.org/10.1093/molbev/msy069
+`swsc` implements the Sliding-Window Site Characteristics (SWSC) method as described in <https://doi.org/10.1093/molbev/msy069>
 
 Initial write was based on [PFinderUCE-SWSC-EN]
 
@@ -8,14 +8,14 @@ Initial write was based on [PFinderUCE-SWSC-EN]
 
 ## Input
 
-`swsc` reads a single nexus file processing two blocks: 
+`swsc` reads a single nexus file processing two blocks:
 
 1. `DATA`, containing the UCE markers (unique by ID)
 2. `SETS`, containing the UCE locations (unique by ID)
 
 Example (any `...` denotes truncated content, see [PFinderUCE-SWSC-EN] for full file):
 
-```
+```text
 #NEXUS
 
 BEGIN DATA;

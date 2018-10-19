@@ -172,7 +172,7 @@ func processDataBlock(nex *Nexus, lines []string) {
 }
 
 func blockByName(s, b string) bool {
-	return strings.HasSuffix(strings.ToUpper(s), strings.ToUpper(b+";"))
+	return strings.HasSuffix(strings.ToUpper(s), strings.ToUpper(" "+b+";"))
 }
 
 // readLines reads a whole file into memory

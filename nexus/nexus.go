@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var (
@@ -24,10 +25,11 @@ var (
 // Nexus is an Only understands two blocks: DATA and SETS
 // meant for exclusive use in swsc
 type Nexus struct {
-	handChan chan interface{}
-	handlers map[string]func(chan interface{}, []string)
-	data     *dataBlock
-	sets     *setsBlock
+	handChan    chan interface{}
+	handlers    map[string]func(chan interface{}, []string)
+	spawnedProc uint
+	data        *dataBlock
+	sets        *setsBlock
 }
 
 type dataBlock struct {
@@ -92,17 +94,25 @@ func New() *Nexus {
 
 // Read fills in the Nexus with data from a file
 func (nex *Nexus) Read(file io.Reader) {
+	inProgressBlocks := new(sync.WaitGroup)
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		for k, f := range nex.handlers {
 			if blockByName(scanner.Text(), k) {
 				lines := copyLines(scanner)
-				go f(nex.handChan, lines)
+				c := make(chan interface{})
+				go func(c1, c2 chan interface{}) { // Spawn a goroutine to track blocks still in process
+					inProgressBlocks.Add(1)
+					c1 <- <-c2
+					inProgressBlocks.Done()
+				}(nex.handChan, c)
+				go f(c, lines)
 			} else {
 				log.Printf("Ignored line:\n\t%q\n", k)
 			}
 		}
 	}
+	inProgressBlocks.Wait()
 }
 
 // copyLines extracts the lines between "BEGIN <block name>;" and "END;", trimming whitespace in the process

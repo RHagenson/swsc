@@ -11,7 +11,7 @@ Initial write was based on [PFinderUCE-SWSC-EN]
 `swsc` reads a single nexus file processing two blocks:
 
 1. `DATA`, containing the UCE markers (unique by ID)
-2. `SETS`, containing the UCE locations (unique by ID)
+2. `SETS`, containing the UCE locations (unique by ID, with inclusive range)
 
 Example (any `...` denotes truncated content, see [PFinderUCE-SWSC-EN] for full file):
 

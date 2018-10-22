@@ -9,6 +9,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/biogo/biogo/alphabet"
+	"github.com/biogo/biogo/seq"
+	"github.com/biogo/biogo/seq/linear"
+	"github.com/biogo/biogo/seq/multi"
 )
 
 var (
@@ -32,30 +37,38 @@ type Nexus struct {
 }
 
 type dataBlock struct {
-	ntax      int               // Number of taxa
-	nchar     int               // Number of characters
-	dataType  string            // Data type (e.g. DNA, RNA, Nucleotide, Protein)
-	gap       byte              // Gap element character
-	missing   byte              // Missing element character
-	alignment map[string]string // Mapping for ID -> sequence
+	ntax      int         // Number of taxa
+	nchar     int         // Number of characters
+	dataType  string      // Data type (e.g. DNA, RNA, Nucleotide, Protein)
+	gap       byte        // Gap element character
+	missing   byte        // Missing element character
+	alignment multi.Multi // Mapping for ID -> sequence
 }
 
 type setsBlock struct {
-	charSets      map[string][]pair            // Map from charset-name -> []pair
+	charSets      map[string][]Pair            // Map from charset-name -> []pair
 	charPartition map[string]map[string]string // Map partition-name -> subset-name -> charset-set||charset-name
 }
 
-type pair struct {
+type Pair struct {
 	start int
 	stop  int
 }
 
+func (p *Pair) Start() int {
+	return p.start
+}
+
+func (p *Pair) Stop() int {
+	return p.stop
+}
+
 // newPair enforces that start is less or equal to stop, if not it returns the reverse
-func newPair(start, stop int) pair {
+func newPair(start, stop int) Pair {
 	if start > stop {
-		return pair{start: stop, stop: start}
+		return Pair{start: stop, stop: start}
 	}
-	return pair{start: start, stop: stop}
+	return Pair{start: start, stop: stop}
 }
 
 func (nex *Nexus) mutator() {
@@ -112,6 +125,23 @@ func (nex *Nexus) Read(file io.Reader) {
 		}
 	}
 	inProgressBlocks.Wait()
+}
+
+func (nex *Nexus) charsets() map[string][]Pair {
+	charsets := nex.sets.charSets
+	copy := make(map[string][]Pair, len(charsets))
+	for k, v := range charsets {
+		copy[k] = v
+	}
+	return copy
+}
+
+func (nex *Nexus) Charsets() map[string][]Pair {
+	return nex.charsets()
+}
+
+func (nex *Nexus) Alignment() multi.Multi {
+	return nex.data.alignment
 }
 
 // copyLines extracts the lines between "BEGIN <block name>;" and "END;", trimming whitespace in the process
@@ -187,11 +217,17 @@ func processDataBlock(c chan interface{}, lines []string) {
 				block.gap = rgGap.FindString(strings.ToUpper(lines[i]))[0]
 				block.missing = rgMissing.FindString(strings.ToUpper(lines[i]))[0]
 			case "MATRIX":
+				multi, _ := multi.NewMulti("aln", *new([]seq.Sequence), seq.DefaultConsensus)
+				seqs := make([]seq.Sequence, 1)
 				for j, seqlin := range lines[i+1:] {
 					if fields := strings.Fields(seqlin); len(fields) == 2 {
-						block.alignment[fields[0]] = fields[1]
+						seqs = append(seqs, linear.NewSeq(fields[0],
+							[]alphabet.Letter(fields[1]),
+							alphabet.DNA,
+						))
 					} else if strings.Contains(seqlin, ";") {
 						i = j
+						multi.Add(seqs...)
 						break
 					}
 				}

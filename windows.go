@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 
+	"github.com/biogo/biogo/seq/multi"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -14,6 +16,37 @@ func (w *window) Start() int {
 
 func (w *window) Stop() int {
 	return w[1]
+}
+
+func getAllWindows(uceAln *multi.Multi, minWin int) []window {
+	// Cannot split into left-flank, core, and right-flank
+	if uceAln.Len() < 3*minWin+1 {
+		message := fmt.Sprintf(
+			"Cannot split UCE into minimum window sized flanks and core.\n"+
+				"Minimum window size: %d, UCE length: %d",
+			minWin, uceAln.Len(),
+		)
+		panic(message)
+	}
+
+	windows := generateWindows(uceAln.Len(), minWin)
+	return windows
+}
+
+// generateWindows produces windows of at least a minimum size given a total length
+// Windows must be:
+//   1) at least minimum window from the start of the UCE (ie, first start at minimum+1)
+//   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
+//   3) at least minimum window in length (ie, window{start, end)})
+func generateWindows(len, min int) []window {
+	windows := make([]window, 0)
+	// TODO: Should preallocate windows array and fill via start+end-minWin indexing
+	for start := min + 1; start+min < len; start++ {
+		for end := start + min + 1; end+min <= len; end++ {
+			windows = append(windows, window{start, end})
+		}
+	}
+	return windows
 }
 
 func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, inVarSites []bool) map[string]window {

@@ -16,20 +16,31 @@ import (
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
+// Required flags
+var (
+	read  = pflag.String("input", "", "Nexus (.nex) file to process")
+	write = pflag.String("output", "", "Partition file to write")
+)
+
 // General use flags
 var (
-	read    = pflag.String("input", "", "Nexus (.nex) file to process")
-	write   = pflag.String("output", "", "Partition file to write")
-	minWin  = pflag.Int("minwindow", 50, "Minimum window size")
-	cfg     = pflag.Bool("cfg", false, "Write file for PartionFinder2")
-	metrics = pflag.StringSlice("metrics", []string{"entropy"}, "Metrics to calculate: entropy and/or gc") // "multi" should be an option, no implemented
-	help    = pflag.Bool("help", false, "Print help and exit")
+	minWin = pflag.Int("minwindow", 50, "Minimum window size")
+	cfg    = pflag.Bool("cfg", false, "Write file for PartionFinder2")
+	help   = pflag.Bool("help", false, "Print help and exit")
+)
+
+// Metric flags
+var (
+	entropy = pflag.Bool("entropy", false, "Calculate Shannon's entropy metric")
+	gc      = pflag.Bool("gc", false, "Calculate GC content metric")
+	// multi = pflag.Bool("multi", false, "Calculate multinomial distribution metric")
 )
 
 // Global reference vars
 var (
 	pFinderFileName = ""
 	datasetName     = ""
+	metrics         = make([]string, 0)
 )
 
 func setup() {
@@ -38,22 +49,34 @@ func setup() {
 		pflag.Usage()
 		os.Exit(1)
 	}
+
+	// Failure states
 	switch {
 	case *read == "" && *write == "":
 		pflag.Usage()
 		log.Fatalf("Must provide input and output names")
 	case !strings.HasSuffix(*read, ".nex"):
-		log.Fatalf("Input expected .nex format, got %s format", path.Ext(*read))
+		log.Fatalf("Input expected in .nex format, got %s format", path.Ext(*read))
 	case !strings.HasSuffix(*write, ".csv"):
-		log.Fatalf("Output expected .csv format, got %s format", path.Ext(*write))
-	case *minWin > 0:
+		log.Fatalf("Output written in .csv format, got %s format", path.Ext(*write))
+	case *minWin < 0:
 		log.Fatalf("Window size must be positive, got %d", *minWin)
+	case !(*entropy || *gc):
+		log.Fatalf("At least one metric is required")
 	default:
 		fmt.Printf("Arguments are reasonable")
 	}
+
+	// Set global vars
 	datasetName = strings.TrimRight(path.Base(*read), ".nex")
 	if *cfg {
 		pFinderFileName = path.Join(path.Dir(*read), datasetName) + ".cfg"
+	}
+	if *entropy {
+		metrics = append(metrics, "entropy")
+	}
+	if *gc {
+		metrics = append(metrics, "gc")
 	}
 }
 
@@ -67,19 +90,18 @@ func main() {
 	}
 	writeOutputHeader()
 	if *cfg {
-		for _, m := range *metrics {
-			writeCfgStartBlock(pFinderFileName, datasetName)
-		}
+		writeCfgStartBlock(pFinderFileName, datasetName)
 	}
 	nex := nexus.New()
 	nex.Read(file)
-	processDatasetMetrics(nex, *metrics, *minWin)
+	// TODO: Provide a quick failure if the shortest UCE is not at least 3*minimum window size as no appropriate flanks and core split is possible.
+	processDatasetMetrics(nex, metrics, *minWin)
 	printFooter(*write, 0) // Placeholder zero
 }
 
 // processDatasetMetrics calculates defined metrics from a *nexus.Nexus
 // using a minimum sliding window size
-func processDatasetMetrics(nex *nexus.Nexus, metrics map[string][]float64, win int) {
+func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int) {
 	var (
 		start    = math.MaxInt16 // Minimum position in UCE
 		stop     = math.MinInt16 // Maximum position in UCE, inclusive
@@ -89,8 +111,7 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics map[string][]float64, win i
 	)
 
 	for name, sites := range charsets {
-		start = sites[0].Start()
-		stop = sites[0].Stop()
+		// Get the widest window for the UCE if multiple windows exist (which they should not, but can)
 		for _, pair := range sites {
 			if pair.Start() < start {
 				start = pair.Start()
@@ -99,6 +120,8 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics map[string][]float64, win i
 				stop = pair.Stop()
 			}
 		}
+
+		// Nexus UCE ranges are inclusive so a +1 adjustment is needed
 		uceAln, _ := aln.Subseq(start, stop+1)
 		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
 		if *cfg {
@@ -197,14 +220,14 @@ func getSses(metrics map[string][]float64, win window, siteVar []bool) []float64
 
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func processUce(uceAln *multi.Multi, metrics map[string][]float64, minWin int) (map[string]window, map[string][]float64) {
+func processUce(uceAln *multi.Multi, metrics []string, minWin int) (map[string]window, map[string][]float64) {
 	metricBestWindow := make(map[string]window, len(metrics))
 	metricBestVals := make(map[string][]float64, len(metrics))
 
 	windows := getAllWindows(uceAln, minWin)
 	inVarSites := invariantSites(uceAln)
 
-	for m := range metrics {
+	for _, m := range metrics {
 		switch m {
 		case "entropy":
 			metricBestVals["entropy"] = sitewiseEntropy(uceAln)
@@ -214,12 +237,12 @@ func processUce(uceAln *multi.Multi, metrics map[string][]float64, minWin int) (
 			// 	metricBestVals["multi"] = sitewiseMulti(uceAln)
 		}
 	}
-	if windows > 1 {
+	if len(windows) > 1 {
 		metricBestWindow = getBestWindows(metrics,
 			windows, uceAln.Len(), inVarSites,
 		)
 	} else {
-		for k := range metrics {
+		for _, k := range metrics {
 			metricBestWindow[k] = windows[0]
 		}
 	}

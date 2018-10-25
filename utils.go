@@ -81,3 +81,20 @@ func anyUndeterminedBlocks(bestWindow window, uceAln *multi.Multi) bool {
 	}
 	return false
 }
+
+// anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
+// Not the same as anyUndeterminedBlocks()
+func anyBlocksWoAllSites(bestWindow window, uceAln *multi.Multi) bool {
+	leftAln, _ := uceAln.Subseq(0, bestWindow[0])
+	coreAln, _ := uceAln.Subseq(bestWindow[0], bestWindow[1])
+	rightAln, _ := uceAln.Subseq(bestWindow[1], uceAln.Len())
+
+	leftCounts := countBases(leftAln)
+	coreCounts := countBases(coreAln)
+	rightCounts := countBases(rightAln)
+
+	if minInCountsMap(leftCounts) == 0 || minInCountsMap(coreCounts) == 0 || minInCountsMap(rightCounts) == 0 {
+		return true
+	}
+	return false
+}

@@ -37,12 +37,12 @@ type Nexus struct {
 }
 
 type dataBlock struct {
-	ntax      int         // Number of taxa
-	nchar     int         // Number of characters
-	dataType  string      // Data type (e.g. DNA, RNA, Nucleotide, Protein)
-	gap       byte        // Gap element character
-	missing   byte        // Missing element character
-	alignment multi.Multi // Mapping for ID -> sequence
+	ntax      int          // Number of taxa
+	nchar     int          // Number of characters
+	dataType  string       // Data type (e.g. DNA, RNA, Nucleotide, Protein)
+	gap       byte         // Gap element character
+	missing   byte         // Missing element character
+	alignment *multi.Multi // Mapping for ID -> sequence
 }
 
 type setsBlock struct {
@@ -140,7 +140,7 @@ func (nex *Nexus) Charsets() map[string][]Pair {
 	return nex.charsets()
 }
 
-func (nex *Nexus) Alignment() multi.Multi {
+func (nex *Nexus) Alignment() *multi.Multi {
 	return nex.data.alignment
 }
 

@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 
-	"github.com/biogo/biogo/seq/multi"
+	"bitbucket.org/rhagenson/swsc/nexus"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -65,10 +65,10 @@ func getMinVarWindow(windows []window, alnLength int) window {
 
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters
 // Not the same as anyBlocksWoAllSites()
-func anyUndeterminedBlocks(bestWindow window, uceAln *multi.Multi) bool {
-	leftAln, _ := uceAln.Subseq(0, bestWindow[0])
-	coreAln, _ := uceAln.Subseq(bestWindow[0], bestWindow[1])
-	rightAln, _ := uceAln.Subseq(bestWindow[1], uceAln.Len())
+func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment) bool {
+	leftAln := uceAln.Subseq(-1, bestWindow[0])
+	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
+	rightAln := uceAln.Subseq(bestWindow[1], -1)
 
 	leftFreq := bpFreqCalc(leftAln)
 	coreFreq := bpFreqCalc(coreAln)
@@ -84,10 +84,10 @@ func anyUndeterminedBlocks(bestWindow window, uceAln *multi.Multi) bool {
 
 // anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
 // Not the same as anyUndeterminedBlocks()
-func anyBlocksWoAllSites(bestWindow window, uceAln *multi.Multi) bool {
-	leftAln, _ := uceAln.Subseq(0, bestWindow[0])
-	coreAln, _ := uceAln.Subseq(bestWindow[0], bestWindow[1])
-	rightAln, _ := uceAln.Subseq(bestWindow[1], uceAln.Len())
+func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment) bool {
+	leftAln := uceAln.Subseq(-1, bestWindow[0])
+	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
+	rightAln := uceAln.Subseq(bestWindow[1], -1)
 
 	leftCounts := countBases(leftAln)
 	coreCounts := countBases(coreAln)

@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"math"
 
-	"github.com/biogo/biogo/seq/multi"
+	"bitbucket.org/rhagenson/swsc/nexus"
 )
 
 type window [2]int
@@ -17,17 +16,7 @@ func (w *window) Stop() int {
 	return w[1]
 }
 
-func getAllWindows(uceAln *multi.Multi, minWin int) []window {
-	// Cannot split into left-flank, core, and right-flank
-	if uceAln.Len() < 3*minWin+1 {
-		message := fmt.Sprintf(
-			"Cannot split UCE into minimum window sized flanks and core.\n"+
-				"Minimum window size: %d, UCE length: %d",
-			minWin, uceAln.Len(),
-		)
-		panic(message)
-	}
-
+func getAllWindows(uceAln nexus.Alignment, minWin int) []window {
 	windows := generateWindows(uceAln.Len(), minWin)
 	return windows
 }

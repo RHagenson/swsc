@@ -8,12 +8,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
-
-	"github.com/biogo/biogo/alphabet"
-	"github.com/biogo/biogo/seq"
-	"github.com/biogo/biogo/seq/linear"
-	"github.com/biogo/biogo/seq/multi"
 )
 
 var (
@@ -27,22 +21,78 @@ var (
 	rgMissing  = regexp.MustCompile(`MISSING\s*=\s*(?P<missing>.)`)
 )
 
-// Nexus is an Only understands two blocks: DATA and SETS
-// meant for exclusive use in swsc
+// Nexus only understands two blocks: DATA and SETS
+// Note: meant for exclusive use in swsc
 type Nexus struct {
-	handChan chan interface{}
-	handlers map[string]func(chan interface{}, []string)
-	data     *dataBlock
-	sets     *setsBlock
+	mailbox  chan interface{}
+	handlers map[string]func(*Nexus, []string)
+	data     dataBlock
+	sets     setsBlock
 }
 
 type dataBlock struct {
-	ntax      int          // Number of taxa
-	nchar     int          // Number of characters
-	dataType  string       // Data type (e.g. DNA, RNA, Nucleotide, Protein)
-	gap       byte         // Gap element character
-	missing   byte         // Missing element character
-	alignment *multi.Multi // Mapping for ID -> sequence
+	ntax      int       // Number of taxa
+	nchar     int       // Number of characters
+	dataType  string    // Data type (e.g. DNA, RNA, Nucleotide, Protein)
+	gap       byte      // Gap element character
+	missing   byte      // Missing element character
+	alignment Alignment // All sequences under consideration
+}
+
+type Alignment []string
+
+// Column is the letters from each internal sequence at position p
+func (aln Alignment) Column(p uint) []byte {
+	pos := make([]byte, aln.NSeq())
+	for i := uint(0); i < aln.NSeq(); i++ {
+		pos[i] = aln.Seq(i)[p]
+	}
+	return pos
+}
+
+func (aln Alignment) NSeq() uint {
+	return uint(len(aln))
+}
+
+func (aln Alignment) Seq(i uint) string {
+	return aln[i]
+}
+
+// Subseq creates an array of slices from the original array
+// A negative start or end is interpreted as ultimate start or end of alignment
+func (aln Alignment) Subseq(s, e int) Alignment {
+	subseqs := make(Alignment, 0)
+	start := 0
+	end := len(aln[0])
+	for _, seq := range aln {
+		switch {
+		case start <= s && e <= end: // Internal slice
+			subseqs = append(subseqs, seq[s:e])
+		case s < 0 && e < 0: // Whole sequence
+			subseqs = append(subseqs, seq[start:end])
+		case s < 0 && e <= end: // Ultimate start to defined end
+			subseqs = append(subseqs, seq[start:e])
+		case start <= s && end < 0: // Defined start to ultimate end
+			subseqs = append(subseqs, seq[s:end])
+		}
+	}
+	return subseqs
+}
+
+func (aln Alignment) String() string {
+	str := ""
+	for i := range aln {
+		str += aln[i] + "\n"
+	}
+	return str
+}
+
+func (aln Alignment) Len() (length int) {
+	for i := range aln {
+		length = len(aln[i])
+		return
+	}
+	return
 }
 
 type setsBlock struct {
@@ -71,14 +121,14 @@ func newPair(start, stop int) Pair {
 	return Pair{start: start, stop: stop}
 }
 
-func (nex *Nexus) mutator() {
+func (nex *Nexus) mailreader() {
 	for {
-		block := <-nex.handChan
+		block := <-nex.mailbox
 		switch block.(type) {
 		case *dataBlock:
-			nex.data = block.(*dataBlock)
+			nex.data = block.(dataBlock)
 		case *setsBlock:
-			nex.sets = block.(*setsBlock)
+			nex.sets = block.(setsBlock)
 		case *struct{}:
 			return
 		}
@@ -88,17 +138,17 @@ func (nex *Nexus) mutator() {
 // New creates a new empty Nexus with registered handlers and deferred block creation
 func New() *Nexus {
 	nex := &Nexus{
-		handChan: make(chan interface{}),
-		handlers: map[string]func(chan interface{}, []string){
+		mailbox: make(chan interface{}),
+		handlers: map[string]func(*Nexus, []string){
 			"DATA": processDataBlock,
 			"SETS": processSetsBlock,
 		},
-		data: new(dataBlock),
-		sets: new(setsBlock),
+		data: *new(dataBlock),
+		sets: *new(setsBlock),
 	}
-	go nex.mutator()
+	go nex.mailreader()
 	runtime.SetFinalizer(nex, func(nex *Nexus) {
-		nex.handChan <- new(struct{})
+		nex.mailbox <- new(struct{})
 		return
 	})
 	return nex
@@ -106,41 +156,35 @@ func New() *Nexus {
 
 // Read fills in the Nexus with data from a file
 func (nex *Nexus) Read(file io.Reader) {
-	inProgressBlocks := new(sync.WaitGroup)
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
+		handled := false
 		for k, f := range nex.handlers {
 			if blockByName(scanner.Text(), k) {
 				lines := copyLines(scanner)
-				c := make(chan interface{})
-				go func(c1, c2 chan interface{}) { // Spawn a goroutine to track blocks still in process
-					inProgressBlocks.Add(1)
-					c1 <- <-c2
-					inProgressBlocks.Done()
-				}(nex.handChan, c)
-				go f(c, lines)
-			} else {
-				log.Printf("Ignored line:\n\t%q\n", k)
+				f(nex, lines)
+				handled = true
 			}
 		}
+		if !handled && scanner.Text() != "" {
+			log.Printf("Scanner ignored line:\n%q\n", scanner.Text())
+		}
 	}
-	inProgressBlocks.Wait()
 }
 
-func (nex *Nexus) charsets() map[string][]Pair {
-	charsets := nex.sets.charSets
-	copy := make(map[string][]Pair, len(charsets))
-	for k, v := range charsets {
+func (nex *Nexus) Charsets() map[string][]Pair {
+	copy := make(map[string][]Pair)
+	for k, v := range nex.charsets() {
 		copy[k] = v
 	}
 	return copy
 }
 
-func (nex *Nexus) Charsets() map[string][]Pair {
-	return nex.charsets()
+func (nex *Nexus) charsets() map[string][]Pair {
+	return nex.sets.charSets
 }
 
-func (nex *Nexus) Alignment() *multi.Multi {
+func (nex *Nexus) Alignment() Alignment {
 	return nex.data.alignment
 }
 
@@ -157,15 +201,16 @@ func copyLines(s *bufio.Scanner) []string {
 	return lines
 }
 
-func processSetsBlock(c chan interface{}, lines []string) {
-	block := new(setsBlock)
+func processSetsBlock(n *Nexus, lines []string) {
+	block := *new(setsBlock)
 	for i := 0; i < len(lines); i++ {
 		fields := strings.Fields(strings.ToUpper(lines[i]))
 		if len(fields) != 0 {
 			switch fields[0] {
 			case "CHARSET":
+				block.charSets = make(map[string][]Pair, 0)
 				charsetName := fields[1]
-				for _, field := range fields[2:] {
+				for _, field := range fields[3:] {
 					setVal := strings.TrimRight(field, ";")
 					if strings.Contains(setVal, "-") {
 						split := strings.Split(setVal, "-")
@@ -184,6 +229,7 @@ func processSetsBlock(c chan interface{}, lines []string) {
 					}
 				}
 			case "CHARPARTITION":
+				block.charPartition = make(map[string]map[string]string, 0)
 				partitionName := fields[1]
 				for _, field := range fields {
 					entry := strings.TrimRight(field, ";")
@@ -191,20 +237,26 @@ func processSetsBlock(c chan interface{}, lines []string) {
 						split := strings.Split(entry, ":")
 						subsetName := split[0]
 						charSet := split[len(split)-1]
-						block.charPartition[partitionName][subsetName] = charSet
+						if _, ok := block.charPartition[partitionName][subsetName]; ok {
+							block.charPartition[partitionName][subsetName] = charSet
+						} else {
+							block.charPartition[partitionName] = make(map[string]string, 0)
+							block.charPartition[partitionName][subsetName] = charSet
+						}
+
 					}
 				}
 			default:
-				log.Printf("Did not understand\n\t%s\nin SETS block\n", lines[i])
+				log.Printf("SET block processor ignored line:\n%q\n", lines[i])
 			}
 		}
 	}
-	c <- block
+	n.sets = block
 	return
 }
 
-func processDataBlock(c chan interface{}, lines []string) {
-	block := new(dataBlock)
+func processDataBlock(n *Nexus, lines []string) {
+	block := *new(dataBlock)
 	for i := 0; i < len(lines); i++ {
 		fields := strings.Fields(strings.ToUpper(lines[i]))
 		if len(fields) != 0 {
@@ -217,26 +269,22 @@ func processDataBlock(c chan interface{}, lines []string) {
 				block.gap = rgGap.FindString(strings.ToUpper(lines[i]))[0]
 				block.missing = rgMissing.FindString(strings.ToUpper(lines[i]))[0]
 			case "MATRIX":
-				multi, _ := multi.NewMulti("aln", *new([]seq.Sequence), seq.DefaultConsensus)
-				seqs := make([]seq.Sequence, 1)
-				for j, seqlin := range lines[i+1:] {
-					if fields := strings.Fields(seqlin); len(fields) == 2 {
-						seqs = append(seqs, linear.NewSeq(fields[0],
-							[]alphabet.Letter(fields[1]),
-							alphabet.DNA,
-						))
-					} else if strings.Contains(seqlin, ";") {
+				for j := i + 1; j < len(lines); j++ {
+					if fields := strings.Fields(lines[j]); len(fields) == 2 {
+						block.alignment = append(block.alignment,
+							fields[1],
+						)
+					} else if strings.Contains(lines[j], ";") {
 						i = j
-						multi.Add(seqs...)
 						break
 					}
 				}
 			default:
-				log.Printf("Did not understand\n\t%s\nin DATA block\n", lines[i])
+				log.Printf("DATA block processor ignored line:\n%q\n", lines[i])
 			}
 		}
 	}
-	c <- block
+	n.data = block
 	return
 }
 

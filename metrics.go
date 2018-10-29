@@ -1,10 +1,8 @@
 package main
 
-import (
-	"github.com/biogo/biogo/seq/multi"
-)
+import "bitbucket.org/rhagenson/swsc/nexus"
 
-// func sitewiseMulti(uceAln *multi.Multi) []float64 {
+// func sitewiseMulti(uceAln nexus.Alignment) []float64 {
 // 	uceCounts := sitewiseBaseCounts(uceAln)
 // 	uceSums := make([]float64, len(uceCounts))
 // 	for i := range uceSums {
@@ -35,7 +33,7 @@ import (
 
 // // Was not in the sample code
 // // Implemented similar to sitewiseBaseCount
-// func sitewiseMultiCounts(uceAln *multi.Multi) map[byte][]float64 {
+// func sitewiseMultiCounts(uceAln nexus.Alignment) map[byte][]float64 {
 // 	counts := map[byte][]float64{
 // 		'A': make([]float64, uceAln.Len()),
 // 		'T': make([]float64, uceAln.Len()),
@@ -52,17 +50,17 @@ import (
 // 	return counts
 // }
 
-func sitewiseEntropy(aln *multi.Multi) []float64 {
+func sitewiseEntropy(aln nexus.Alignment) []float64 {
 	entropies := make([]float64, aln.Len())
 	for i := 0; i < aln.Len(); i++ {
-		site, _ := aln.Subseq(i, i+1)
+		site := aln.Subseq(i, i+1)
 		entropies[i] = alignmentEntropy(site)
 	}
 	return entropies
 }
 
 // sitewiseBaseCounts returns a 4xN aeeay of base counts where N is the number of sites
-func sitewiseBaseCounts(uceAln *multi.Multi) map[byte][]int {
+func sitewiseBaseCounts(uceAln nexus.Alignment) map[byte][]int {
 	counts := map[byte][]int{
 		'A': make([]int, uceAln.Len()),
 		'T': make([]int, uceAln.Len()),
@@ -70,7 +68,7 @@ func sitewiseBaseCounts(uceAln *multi.Multi) map[byte][]int {
 		'G': make([]int, uceAln.Len()),
 	}
 	for i := 0; i < uceAln.Len(); i++ {
-		site, _ := uceAln.Subseq(i, i+1)
+		site := uceAln.Subseq(i, i+1)
 		bCounts := countBases(site)
 		for k, v := range bCounts {
 			counts[k][i] += v
@@ -79,17 +77,17 @@ func sitewiseBaseCounts(uceAln *multi.Multi) map[byte][]int {
 	return counts
 }
 
-func sitewiseGc(uceAln *multi.Multi) []float64 {
+func sitewiseGc(uceAln nexus.Alignment) []float64 {
 	gc := make([]float64, uceAln.Len())
 	for i := range gc {
-		site := uceAln.Column(i, false)
+		site := uceAln.Column(uint(i))
 		// TODO: Will not compute properly if using lowercase letters
 		for _, nuc := range site {
 			if byte(nuc) == 'G' || byte(nuc) == 'C' {
 				gc[i]++
 			}
 		}
-		gc[i] = gc[i] / float64(uceAln.Rows())
+		gc[i] = gc[i] / float64(uceAln.NSeq())
 	}
 	return gc
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
-	"github.com/biogo/biogo/seq/multi"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
@@ -110,7 +109,7 @@ func writeCfgStartBlock(f *os.File, datasetName string) {
 }
 
 // pFinderConfigBlock appends the proper window size for the UCE
-func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln *multi.Multi) {
+func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln nexus.Alignment) {
 	block := ""
 	// anyUndeterminedBlocks and anyBlocksWoAllSites are the frequency and absolute ATGC counts
 	// indetermination is by zero frequency or zero count of any letter

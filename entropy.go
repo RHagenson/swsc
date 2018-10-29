@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/biogo/biogo/seq/multi"
+	"bitbucket.org/rhagenson/swsc/nexus"
 	"gonum.org/v1/gonum/stat"
 )
 
 // alignmentEntropy calculates entropies of characters
-func alignmentEntropy(aln *multi.Multi) float64 {
+func alignmentEntropy(aln nexus.Alignment) float64 {
 	bpFreq := bpFreqCalc(aln)
 	entropy := entropyCalc(bpFreq)
 	return entropy

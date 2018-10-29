@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
-	"github.com/biogo/biogo/seq/linear"
-	"github.com/biogo/biogo/seq/multi"
 	"github.com/spf13/pflag"
 	"gonum.org/v1/gonum/stat"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -118,10 +116,11 @@ func main() {
 	nex.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	if nex.Alignment().Len() <= *minWin*3 {
+	length := nex.Alignment().Len()
+	if length/3 <= *minWin {
 		message := fmt.Sprintf(
 			"minWin is too large, maximum allowed value is %d\n",
-			nex.Alignment().Len()/3,
+			length/3,
 		)
 		panic(message)
 	}
@@ -160,7 +159,7 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 			}
 		}
 
-		uceAln, _ := aln.Subseq(start, stop+1) // Nexus UCE ranges are inclusive so a +1 adjustment is needed
+		uceAln := aln.Subseq(start, stop+1) // Nexus UCE ranges are inclusive so a +1 adjustment is needed
 		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
 		if *cfg {
 			for _, bestWindow := range bestWindows {
@@ -193,7 +192,7 @@ func factorialMatrix(vs map[byte][]int) []float64 {
 }
 
 // invariantSites streams across an alignment and calls sites invariant by their entropy
-func invariantSites(aln *multi.Multi) []bool {
+func invariantSites(aln nexus.Alignment) []bool {
 	entropies := sitewiseEntropy(aln)
 	calls := make([]bool, len(entropies))
 	for i, v := range entropies {
@@ -251,7 +250,7 @@ func getSses(metrics map[string][]float64, win window, siteVar []bool) map[strin
 
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func processUce(uceAln *multi.Multi, metrics []string, minWin int) (map[string]window, map[string][]float64) {
+func processUce(uceAln nexus.Alignment, metrics []string, minWin int) (map[string]window, map[string][]float64) {
 	metricBestWindow := make(map[string]window, len(metrics))
 	metricBestVals := make(map[string][]float64, len(metrics))
 
@@ -280,7 +279,7 @@ func processUce(uceAln *multi.Multi, metrics []string, minWin int) (map[string]w
 	return metricBestWindow, metricBestVals
 }
 
-func bpFreqCalc(aln *multi.Multi) map[byte]float32 {
+func bpFreqCalc(aln []string) map[byte]float32 {
 	freqs := map[byte]float32{
 		'A': 0.0,
 		'T': 0.0,
@@ -301,7 +300,7 @@ func bpFreqCalc(aln *multi.Multi) map[byte]float32 {
 	return freqs
 }
 
-func countBases(aln *multi.Multi) map[byte]int {
+func countBases(aln nexus.Alignment) map[byte]int {
 	counts := map[byte]int{
 		'A': 0,
 		'T': 0,
@@ -309,9 +308,8 @@ func countBases(aln *multi.Multi) map[byte]int {
 		'C': 0,
 	}
 	allSeqs := ""
-	for _, seq := range aln.Seq {
-		rSeq := seq.(*linear.Seq)
-		allSeqs += rSeq.String()
+	for _, seq := range aln {
+		allSeqs += seq
 	}
 	for _, char := range allSeqs {
 		counts[byte(char)]++

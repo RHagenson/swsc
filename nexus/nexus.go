@@ -39,6 +39,33 @@ type dataBlock struct {
 	alignment Alignment // All sequences under consideration
 }
 
+// NTax is the number of taxa
+func (nex *Nexus) NTax() int {
+	return nex.data.ntax
+}
+
+// NChar is the number of characters
+func (nex *Nexus) NChar() int {
+	return nex.data.nchar
+}
+
+// DataType is the type of data (e.g. DNA, RNA, Nucleotide, Protein)
+func (nex *Nexus) DataType() string {
+	return nex.data.dataType
+}
+
+// Gap is the character used to represent a gap
+func (nex *Nexus) Gap() byte {
+	return nex.data.gap
+}
+
+// Missing is the character used to represent a missing element
+func (nex *Nexus) Missing() byte {
+	return nex.data.missing
+}
+
+// Alignment is a collection of equal length sequences
+// Appends missing characters (see Nexus.Missing()) to shorter sequences
 type Alignment []string
 
 // Column is the letters from each internal sequence at position p
@@ -50,10 +77,12 @@ func (aln Alignment) Column(p uint) []byte {
 	return pos
 }
 
+// NSeq is the number of sequences in the alignment
 func (aln Alignment) NSeq() uint {
 	return uint(len(aln))
 }
 
+// Seq returns the i-th sequence in the alignment
 func (aln Alignment) Seq(i uint) string {
 	return aln[i]
 }
@@ -62,18 +91,18 @@ func (aln Alignment) Seq(i uint) string {
 // A negative start or end is interpreted as ultimate start or end of alignment
 func (aln Alignment) Subseq(s, e int) Alignment {
 	subseqs := make(Alignment, 0)
-	start := 0
-	end := len(aln[0])
 	for _, seq := range aln {
 		switch {
-		case start <= s && e <= end: // Internal slice
+		case s < 0 && e < 0: // Whole alignment
+			subseqs = append(subseqs, seq[:])
+		case s < 0 && e < aln.Len(): // Start to defined end
+			subseqs = append(subseqs, seq[:e])
+		case s < aln.Len() && e < 0: // Defined start to end
+			subseqs = append(subseqs, seq[s:])
+		case e < aln.Len() && s < e: // Defined start to defined end
 			subseqs = append(subseqs, seq[s:e])
-		case s < 0 && e < 0: // Whole sequence
-			subseqs = append(subseqs, seq[start:end])
-		case s < 0 && e <= end: // Ultimate start to defined end
-			subseqs = append(subseqs, seq[start:e])
-		case start <= s && end < 0: // Defined start to ultimate end
-			subseqs = append(subseqs, seq[s:end])
+		default:
+			panic("Requested out of bounds slice")
 		}
 	}
 	return subseqs
@@ -87,10 +116,12 @@ func (aln Alignment) String() string {
 	return str
 }
 
+// Len is the length of the alignment
 func (aln Alignment) Len() (length int) {
 	for i := range aln {
-		length = len(aln[i])
-		return
+		if length < len(aln[i]) {
+			length = len(aln[i])
+		}
 	}
 	return
 }
@@ -100,25 +131,25 @@ type setsBlock struct {
 	charPartition map[string]map[string]string // Map partition-name -> subset-name -> charset-set||charset-name
 }
 
-type Pair struct {
-	start int
-	stop  int
+// Pair is a pair of integer values (typically represents a range)
+type Pair [2]int
+
+// First is the first value of the Pair
+func (p *Pair) First() int {
+	return p[0]
 }
 
-func (p *Pair) Start() int {
-	return p.start
+// Second is the second value of the Pair
+func (p *Pair) Second() int {
+	return p[1]
 }
 
-func (p *Pair) Stop() int {
-	return p.stop
-}
-
-// newPair enforces that start is less or equal to stop, if not it returns the reverse
+// newPair enforces that start is less than or equal to stop
 func newPair(start, stop int) Pair {
-	if start > stop {
-		return Pair{start: stop, stop: start}
+	if start <= stop {
+		return Pair{start, stop}
 	}
-	return Pair{start: start, stop: stop}
+	panic("Pair with start > stop attempted")
 }
 
 func (nex *Nexus) mailreader() {
@@ -172,18 +203,16 @@ func (nex *Nexus) Read(file io.Reader) {
 	}
 }
 
+// Charsets returns a copy of the internal character sets
 func (nex *Nexus) Charsets() map[string][]Pair {
 	copy := make(map[string][]Pair)
-	for k, v := range nex.charsets() {
+	for k, v := range nex.sets.charSets {
 		copy[k] = v
 	}
 	return copy
 }
 
-func (nex *Nexus) charsets() map[string][]Pair {
-	return nex.sets.charSets
-}
-
+// Alignment returns a copy of the internal alignment
 func (nex *Nexus) Alignment() Alignment {
 	return nex.data.alignment
 }
@@ -276,6 +305,7 @@ func processDataBlock(n *Nexus, lines []string) {
 						)
 					} else if strings.Contains(lines[j], ";") {
 						i = j
+						block.makeAlignEqual()
 						break
 					}
 				}
@@ -285,6 +315,20 @@ func processDataBlock(n *Nexus, lines []string) {
 		}
 	}
 	n.data = block
+	return
+}
+
+func (d *dataBlock) makeAlignEqual() {
+	length := 0
+	for _, v := range d.alignment {
+		if length < len(v) {
+			length = len(v)
+		}
+	}
+	for i, v := range d.alignment {
+		d.alignment[i] = d.alignment[i] +
+			strings.Repeat(string(d.missing), len(v)-length)
+	}
 	return
 }
 

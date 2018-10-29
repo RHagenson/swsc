@@ -6,11 +6,12 @@ import (
 	"log"
 	"os"
 
+	"bitbucket.org/rhagenson/swsc/nexus"
 	"github.com/biogo/biogo/seq/multi"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
-func writeOutputHeader() {
+func writeOutputHeader(f *os.File) {
 	header := []string{
 		"name",
 		"uce_site", "aln_site",
@@ -18,53 +19,83 @@ func writeOutputHeader() {
 		"type", "value",
 		"plot_mtx",
 	}
-	if w, err := os.Open(*write); err != nil {
-		file := csv.NewWriter(w)
-		if err := file.Write(header); err != nil {
-			log.Printf("Encountered %s in writing to file %s", err, *write)
-		}
-	} else {
-		w.Close()
-		log.Fatal(err)
+	file := csv.NewWriter(f)
+	if err := file.Write(header); err != nil {
+		file.Flush()
+		log.Printf("Problem writing %s, encountered %s.", f.Name(), err)
 	}
 	return
 }
 
-// writeOutput appends partitioning data to *write
-func writeOutput(f string, d [][]string) {
-	if w, err := os.OpenFile(f, os.O_APPEND|os.O_WRONLY, 0644); err != nil {
-		file := csv.NewWriter(w)
-		if err := file.WriteAll(d); err != nil {
-			log.Printf("Encountered %s in writing to file %s", err, f)
+// writeOutput appends partitioning data to output
+func writeOutput(f *os.File, bestWindows map[string]window, metricArray map[string][]float64, alnSites []nexus.Pair, name string) {
+	// Validate input
+	for k, v := range metricArray {
+		if len(v) != len(alnSites) {
+			log.Fatalf("Not enough (%d) alignment sites produced to match metric %s", len(alnSites), k)
 		}
-	} else {
-		w.Close()
-		log.Fatal(err)
+	}
+
+	d := make([][]string, 0)
+	N := len(alnSites)
+	middle := int(float64(N) / 2.0)
+	uceSites := make([]int, N)
+	for i := range uceSites {
+		uceSites[i] = i - middle
+	}
+
+	names := make([]string, N*3)
+	for i := range names {
+		names[i] = name
+	}
+
+	matrixVals := make([]int8, N)
+	for _, w := range bestWindows {
+		matrixVals = csvColToPlotMatrix(w, N)
+	}
+
+	file := csv.NewWriter(f)
+	for m, v := range metricArray {
+		window := bestWindows[m]
+		for i := 0; i < N; i++ {
+			file.Write([]string{
+				name,                    // UCE name
+				string(uceSites[i]),     // UCE site position relative to center of alignment
+				string(i),               // UCE site position absolute
+				string(window.Start()),  // Best window for metric, start
+				string(window.Stop()),   // Best window for metric, stop
+				m,                       // Metric under analysis
+				fmt.Sprintf("%f", v[i]), // Metric value at site position
+				string(matrixVals[i]),   // Prior to best window (-1), in best window (0), after window (+1)
+			})
+		}
+	}
+
+	if err := file.WriteAll(d); err != nil {
+		log.Printf("Encountered %s in writing to file %s", err, f.Name())
 	}
 }
 
 // writeCfgEndBlock appends the end block to the specified .cfg file
-func writeCfgEndBlock(pFinderFileName, datasetName string) {
+func writeCfgEndBlock(f *os.File, datasetName string) {
 	search := "rclusterf"
 	block := "\n" +
 		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +
 		"[schemes]\n" +
 		fmt.Sprintf("search = %s;\n\n", search)
-	if file, err := os.OpenFile(pFinderFileName, os.O_APPEND|os.O_WRONLY, 0644); err != nil {
-		file.WriteString(block)
-	} else {
+	if _, err := f.WriteString(block); err != nil {
 		log.Fatalf("Failed to write .cfg end block: %s", err)
 	}
 }
 
 // writeCfgStartBlock truncates the file to only the start block
-func writeCfgStartBlock(pFinderFileName, datasetName string) {
+func writeCfgStartBlock(f *os.File, datasetName string) {
 	branchLengths := "linked"
 	models := "GTR+G"
 	modelSelection := "aicc"
 
 	block := "## ALIGNMENT FILE ##\n" +
-		fmt.Sprint("alignment = %s.phy;\n\n", datasetName) +
+		fmt.Sprintf("alignment = %s.nex;\n\n", datasetName) +
 		"## BRANCHLENGTHS: linked | unlinked ##\n" +
 		fmt.Sprintf("branchlengths = %s;\n\n", branchLengths) +
 		"MODELS OF EVOLUTION: all | allx | mybayes | beast | gamma | gammai <list> ##\n" +
@@ -73,15 +104,13 @@ func writeCfgStartBlock(pFinderFileName, datasetName string) {
 		fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +
 		"## DATA BLOCKS: see manual for how to define ##\n" +
 		"[data_blocks]\n"
-	if file, err := os.Open(pFinderFileName); err != nil {
-		file.WriteString(block)
-	} else {
+	if _, err := f.WriteString(block); err != nil {
 		log.Fatalf("Could not write PartionFinder2 file: %s", err)
 	}
 }
 
 // pFinderConfigBlock appends the proper window size for the UCE
-func pFinderConfigBlock(pFinderFileName, name string, bestWindow window, start, stop int, uceAln *multi.Multi) {
+func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln *multi.Multi) {
 	block := ""
 	// anyUndeterminedBlocks and anyBlocksWoAllSites are the frequency and absolute ATGC counts
 	// indetermination is by zero frequency or zero count of any letter
@@ -104,9 +133,7 @@ func pFinderConfigBlock(pFinderFileName, name string, bestWindow window, start, 
 			fmt.Sprintf("%s_right = %d-%d;\n", name, rightStart, rightEnd)
 	}
 
-	if file, err := os.OpenFile(pFinderFileName, os.O_APPEND|os.O_WRONLY, 0644); err != nil {
-		file.WriteString(block)
-	} else {
+	if _, err := f.WriteString(block); err != nil {
 		log.Fatalf("Failed to write .cfg config block: %s", err)
 	}
 }

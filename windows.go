@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"sort"
+	"math"
 
 	"github.com/biogo/biogo/seq/multi"
-	"gonum.org/v1/gonum/mat"
 )
 
 type window [2]int
@@ -54,54 +53,36 @@ func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, 
 	// rows = number of metrics
 	// columns = number of windows
 	// data = nil, allocate new backing slice
-	allSSEs := mat.NewDense(len(metrics), len(windows), nil)
+	// Each "cell" of the matrix created by {metric}x{window} is the position-wise SSE for that combination
+	sses := make(map[string]map[window]float64, 3)
 
 	// 2) Get SSE for each cell in array
-	for i, window := range windows {
+	for _, window := range windows {
 		// Get SSEs for a given window
-		allSSEs.SetCol(i, getSses(metrics, window, inVarSites))
+		temp := getSses(metrics, window, inVarSites)
+		for m := range temp {
+			sses[m][window] = sse(temp[m])
+		}
 	}
 
-	// 3) get index of minimum value for each metric
-	// Indexed the same as metrics argument
-	// TODO: Point of non-determinism: Many values can equal the minimum, but the first
-	// is chosen using this manner. Improvement:
-	length := 0
-	for _, v := range metrics {
-		length = len(v)
-		break
-	}
-	valMins := make([]float64, length)
-	for i := 0; i < length; i++ {
-		vals := allSSEs.RawRowView(i)
-		copyVals := make([]float64, len(vals))
-		copy(copyVals, vals)
-		sort.Float64s(copyVals) // Sort done in place
-		valMins[i] = copyVals[0]
-	}
-
-	// choose windows with the minimum variance in length of l-flank, core, r-flank
-	valMinIndexes := make(map[string][]int)
-	for m, v := range metrics {
-		for i := 0; i < len(v); i++ {
-			vals := allSSEs.RawRowView(i)
-			for j := range vals {
-				if valMins[i] == vals[j] {
-					valMinIndexes[m] = append(valMinIndexes[m], j)
-				}
+	// Find minimum values and record the window(s) they occur in
+	minMetricWindows := make(map[string][]window)
+	for m, windows := range sses {
+		bestVal := math.MaxFloat64
+		for w, val := range windows {
+			if val < bestVal {
+				bestVal = val
+				minMetricWindows[m] = []window{w}
+			} else if val == bestVal {
+				minMetricWindows[m] = append(minMetricWindows[m], w)
 			}
 		}
-	}
-	minMetricWindows := make(map[string][]window)
-	for k, vs := range valMinIndexes {
-		wins := make([]window, 0)
-		for v := range vs {
-			wins = append(wins, windows[v])
-		}
+
 	}
 	absMinWindow := make(map[string]window)
-	for m, v := range minMetricWindows {
+	for m := range minMetricWindows {
 		absMinWindow[m] = getMinVarWindow(minMetricWindows[m], alnLen)
 	}
+
 	return absMinWindow
 }

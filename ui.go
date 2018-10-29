@@ -12,7 +12,7 @@ func printHeader(f string) {
 }
 
 // printFooter informs the user of what work was just performed with helpful metrics
-func printFooter(f string, l int) {
+func printFooter(f string) {
 	fmt.Println()
-	fmt.Printf("Wrote %d partitions to %s\n", l, f)
+	fmt.Printf("Wrote partitions to %s\n", f)
 }

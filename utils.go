@@ -98,3 +98,18 @@ func anyBlocksWoAllSites(bestWindow window, uceAln *multi.Multi) bool {
 	}
 	return false
 }
+
+func csvColToPlotMatrix(best window, n int) []int8 {
+	matrix := make([]int8, n)
+	for i := range matrix {
+		switch {
+		case i < best[0]:
+			matrix[i] = -1
+		case best[0] < i && i < best[1]:
+			matrix[i] = 0
+		case best[1] < i:
+			matrix[i] = 1
+		}
+	}
+	return matrix
+}

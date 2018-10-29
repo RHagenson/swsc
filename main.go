@@ -24,7 +24,7 @@ var (
 
 // General use flags
 var (
-	minWin = pflag.Int("minwindow", 50, "Minimum window size")
+	minWin = pflag.Int("minWin", 50, "Minimum window size")
 	cfg    = pflag.Bool("cfg", false, "Write file for PartionFinder2")
 	help   = pflag.Bool("help", false, "Print help and exit")
 )
@@ -39,6 +39,7 @@ var (
 // Global reference vars
 var (
 	pFinderFileName = ""
+	pfinder         = new(os.File)
 	datasetName     = ""
 	metrics         = make([]string, 0)
 )
@@ -81,37 +82,75 @@ func setup() {
 }
 
 func main() {
+	// Parse CLI arguments
 	setup()
+
+	// Inform user on STDOUT what is being done
 	printHeader(*read)
-	file, err := os.Open(*read)
-	defer file.Close()
+
+	// Open input file
+	in, err := os.Open(*read)
+	defer in.Close()
 	if err != nil {
-		log.Fatalf("Could not read file: %s", err)
+		log.Fatalf("Could not read input file: %s", err)
 	}
-	writeOutputHeader()
+
+	out, err := os.Create(*write)
+	defer out.Close()
+	if err != nil {
+		log.Fatalf("Could not create output file: %s", err)
+	}
+
+	// Write the header to the output file (clears output file if present)
+	writeOutputHeader(out)
+
+	// If PartitionFinder2 config file is desired, write its header/starting block
 	if *cfg {
-		writeCfgStartBlock(pFinderFileName, datasetName)
+		pfinder, err = os.Create(pFinderFileName)
+		if err != nil {
+			log.Fatalf("Could not read file: %s", err)
+		}
+		writeCfgStartBlock(pfinder, datasetName)
 	}
+
+	// Read in the input Nexus file
 	nex := nexus.New()
-	nex.Read(file)
-	// TODO: Provide a quick failure if the shortest UCE is not at least 3*minimum window size as no appropriate flanks and core split is possible.
-	processDatasetMetrics(nex, metrics, *minWin)
-	printFooter(*write, 0) // Placeholder zero
+	nex.Read(in)
+
+	// Early panic if minWin has been set too large to create flanks and core of that length
+	if nex.Alignment().Len() <= *minWin*3 {
+		message := fmt.Sprintf(
+			"minWin is too large, maximum allowed value is %d\n",
+			nex.Alignment().Len()/3,
+		)
+		panic(message)
+	}
+
+	// Process the input with selected metrics and minimum window size, internally writing output files
+	processDatasetMetrics(nex, metrics, *minWin, pfinder, out)
+
+	// Inform user of where output was written
+	printFooter(*write)
+	if *cfg {
+		pfinder.Close()
+	}
 }
 
 // processDatasetMetrics calculates defined metrics from a *nexus.Nexus
 // using a minimum sliding window size
-func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int) {
+func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder, out *os.File) {
+	// Initialize local variables
 	var (
-		start    = math.MaxInt16 // Minimum position in UCE
-		stop     = math.MinInt16 // Maximum position in UCE, inclusive
-		aln      = nex.Alignment()
-		charsets = nex.Charsets()
-		bar      = pb.StartNew(len(charsets))
+		start = math.MaxInt16 // Minimum position in UCE
+		stop  = math.MinInt16 // Maximum position in UCE, inclusive
+		aln   = nex.Alignment()
+		uces  = nex.Charsets()
+		bar   = pb.StartNew(len(uces))
 	)
 
-	for name, sites := range charsets {
-		// Get the widest window for the UCE if multiple windows exist (which they should not, but can)
+	// Process each UCE in turn
+	for name, sites := range uces {
+		// Get the widest window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
 		for _, pair := range sites {
 			if pair.Start() < start {
 				start = pair.Start()
@@ -121,29 +160,20 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int) {
 			}
 		}
 
-		// Nexus UCE ranges are inclusive so a +1 adjustment is needed
-		uceAln, _ := aln.Subseq(start, stop+1)
+		uceAln, _ := aln.Subseq(start, stop+1) // Nexus UCE ranges are inclusive so a +1 adjustment is needed
 		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
 		if *cfg {
-			pFinderConfig, err := os.OpenFile(
-				pFinderFileName,
-				os.O_APPEND|os.O_WRONLY, 0644,
-			)
-			defer pFinderConfig.Close()
-			if err != nil {
-				log.Fatalf("Could not append to PartitionFinder2 file: %s", err)
-			}
-			for i, bestWindow := range bestWindows {
-				pFinderConfigBlock(pFinderFileName, name, bestWindow, start, stop, uceAln)
+			for _, bestWindow := range bestWindows {
+				pFinderConfigBlock(pfinder, name, bestWindow, start, stop, uceAln)
 			}
 		}
-		writeOutput(*write, [][]string{bestWindows, metricArray, sites, name})
+		writeOutput(out, bestWindows, metricArray, sites, name)
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")
 	if *cfg {
-		for _, m := range metrics {
-			writeCfgEndBlock(pFinderFileName, datasetName)
+		for range metrics {
+			writeCfgEndBlock(pfinder, datasetName)
 		}
 	}
 	return
@@ -160,15 +190,6 @@ func factorialMatrix(vs map[byte][]int) []float64 {
 		}
 	}
 	return product
-}
-
-func sse(vs []float64) float64 {
-	mean := stat.Mean(vs, nil)
-	total := 0.0
-	for _, v := range vs {
-		total += math.Pow((v / mean), 2)
-	}
-	return total
 }
 
 // invariantSites streams across an alignment and calls sites invariant by their entropy
@@ -192,6 +213,16 @@ func allInvariantSites(vs []bool) bool {
 	return true
 }
 
+// Compute Sum of Square Errors
+func sse(vs []float64) float64 {
+	mean := stat.Mean(vs, nil)
+	total := 0.0
+	for _, v := range vs {
+		total += math.Pow((v / mean), 2)
+	}
+	return total
+}
+
 func getSse(metric []float64, win window, siteVar []bool) float64 {
 	leftAln := allInvariantSites(siteVar[:win.Start()])
 	coreAln := allInvariantSites(siteVar[win.Start():win.Stop()])
@@ -209,11 +240,11 @@ func getSse(metric []float64, win window, siteVar []bool) float64 {
 
 // getSses generalized getSse over each site window.
 // metrics is [metric name][value index] arranged
-func getSses(metrics map[string][]float64, win window, siteVar []bool) []float64 {
+func getSses(metrics map[string][]float64, win window, siteVar []bool) map[string][]float64 {
 	// TODO: Preallocate array
-	sses := make([]float64, 0)
-	for i := range metrics {
-		sses = append(sses, getSse(metrics[i], win, siteVar))
+	sses := make(map[string][]float64, len(metrics))
+	for m := range metrics {
+		sses[m] = append(sses[m], getSse(metrics[m], win, siteVar))
 	}
 	return sses
 }
@@ -238,7 +269,7 @@ func processUce(uceAln *multi.Multi, metrics []string, minWin int) (map[string]w
 		}
 	}
 	if len(windows) > 1 {
-		metricBestWindow = getBestWindows(metrics,
+		metricBestWindow = getBestWindows(metricBestVals,
 			windows, uceAln.Len(), inVarSites,
 		)
 	} else {

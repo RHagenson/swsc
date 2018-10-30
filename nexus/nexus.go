@@ -2,32 +2,22 @@ package nexus
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
-)
 
-var (
-	// Example: DIMENSIONS NTAX=10 NCHAR=5786;
-	rgNtax  = regexp.MustCompile(`NTAX\s*=\s*(?P<ntax>\d+)`)
-	rgNchar = regexp.MustCompile(`NCHAR\s*=\s*(?P<nchar>\d+)`)
-
-	// Example: FORMAT DATATYPE=DNA GAP=- MISSING=?;
-	rgDatatype = regexp.MustCompile(`DATATYPE\s*=\s*(?P<datatype>.+)`)
-	rgGap      = regexp.MustCompile(`GAP\s*=\s*(?P<gap>.)`)
-	rgMissing  = regexp.MustCompile(`MISSING\s*=\s*(?P<missing>.)`)
+	"github.com/pkg/errors"
 )
 
 // Nexus only understands two blocks: DATA and SETS
 // Note: meant for exclusive use in swsc
 type Nexus struct {
-	mailbox  chan interface{}
-	handlers map[string]func(*Nexus, []string)
-	data     dataBlock
-	sets     setsBlock
+	handlers map[string]func([]string, *Nexus)
+	data     *dataBlock
+	sets     *setsBlock
 }
 
 type dataBlock struct {
@@ -95,14 +85,17 @@ func (aln Alignment) Subseq(s, e int) Alignment {
 		switch {
 		case s < 0 && e < 0: // Whole alignment
 			subseqs = append(subseqs, seq[:])
-		case s < 0 && e < aln.Len(): // Start to defined end
+		case s < 0 && e <= aln.Len(): // Start to defined end
 			subseqs = append(subseqs, seq[:e])
 		case s < aln.Len() && e < 0: // Defined start to end
 			subseqs = append(subseqs, seq[s:])
-		case e < aln.Len() && s < e: // Defined start to defined end
+		case e <= aln.Len() && s < e: // Defined start to defined end
 			subseqs = append(subseqs, seq[s:e])
 		default:
-			panic("Requested out of bounds slice")
+			msg := fmt.Sprintf("Requested out of bounds slice, "+
+				"bounds [%d:%d], requested [%d:%d]",
+				0, len(aln.Seq(0)), s, e)
+			panic(msg)
 		}
 	}
 	return subseqs
@@ -152,36 +145,16 @@ func newPair(start, stop int) Pair {
 	panic("Pair with start > stop attempted")
 }
 
-func (nex *Nexus) mailreader() {
-	for {
-		block := <-nex.mailbox
-		switch block.(type) {
-		case *dataBlock:
-			nex.data = block.(dataBlock)
-		case *setsBlock:
-			nex.sets = block.(setsBlock)
-		case *struct{}:
-			return
-		}
-	}
-}
-
 // New creates a new empty Nexus with registered handlers and deferred block creation
 func New() *Nexus {
 	nex := &Nexus{
-		mailbox: make(chan interface{}),
-		handlers: map[string]func(*Nexus, []string){
+		handlers: map[string]func([]string, *Nexus){
 			"DATA": processDataBlock,
 			"SETS": processSetsBlock,
 		},
-		data: *new(dataBlock),
-		sets: *new(setsBlock),
+		data: new(dataBlock),
+		sets: new(setsBlock),
 	}
-	go nex.mailreader()
-	runtime.SetFinalizer(nex, func(nex *Nexus) {
-		nex.mailbox <- new(struct{})
-		return
-	})
 	return nex
 }
 
@@ -193,7 +166,7 @@ func (nex *Nexus) Read(file io.Reader) {
 		for k, f := range nex.handlers {
 			if blockByName(scanner.Text(), k) {
 				lines := copyLines(scanner)
-				f(nex, lines)
+				f(lines, nex)
 				handled = true
 			}
 		}
@@ -201,6 +174,7 @@ func (nex *Nexus) Read(file io.Reader) {
 			log.Printf("Scanner ignored line:\n%q\n", scanner.Text())
 		}
 	}
+	return
 }
 
 // Charsets returns a copy of the internal character sets
@@ -230,8 +204,8 @@ func copyLines(s *bufio.Scanner) []string {
 	return lines
 }
 
-func processSetsBlock(n *Nexus, lines []string) {
-	block := *new(setsBlock)
+func processSetsBlock(lines []string, nex *Nexus) {
+	block := new(setsBlock)
 	for i := 0; i < len(lines); i++ {
 		fields := strings.Fields(strings.ToUpper(lines[i]))
 		if len(fields) != 0 {
@@ -280,23 +254,57 @@ func processSetsBlock(n *Nexus, lines []string) {
 			}
 		}
 	}
-	n.sets = block
+	nex.sets = block
 	return
 }
 
-func processDataBlock(n *Nexus, lines []string) {
-	block := *new(dataBlock)
+func splitOnEqualSign(c rune) bool {
+	return c == '='
+}
+
+func processDataBlock(lines []string, nex *Nexus) {
+	block := new(dataBlock)
 	for i := 0; i < len(lines); i++ {
 		fields := strings.Fields(strings.ToUpper(lines[i]))
 		if len(fields) != 0 {
 			switch fields[0] {
 			case "DIMENSIONS":
-				block.ntax, _ = strconv.Atoi(rgNtax.FindString(strings.ToUpper(lines[i])))
-				block.nchar, _ = strconv.Atoi(rgNchar.FindString(strings.ToUpper(lines[i])))
+				var err error
+				for _, word := range fields[1:] {
+					if strings.HasPrefix(word, "NTAX=") {
+						pair := strings.FieldsFunc(word, splitOnEqualSign)
+						strnum := strings.Trim(pair[1], " ;")
+						block.ntax, err = strconv.Atoi(strnum)
+						if err != nil {
+							err = errors.Wrap(err, "Could not convert to int")
+							log.Println(err)
+						}
+					}
+					if strings.HasPrefix(word, "NCHAR") {
+						pair := strings.FieldsFunc(word, splitOnEqualSign)
+						strnum := strings.Trim(pair[1], " ;")
+						block.nchar, err = strconv.Atoi(strnum)
+						if err != nil {
+							err = errors.Wrap(err, "Could not convert to int")
+							log.Println(err)
+						}
+					}
+				}
 			case "FORMAT":
-				block.dataType = rgDatatype.FindString(strings.ToUpper(lines[i]))
-				block.gap = rgGap.FindString(strings.ToUpper(lines[i]))[0]
-				block.missing = rgMissing.FindString(strings.ToUpper(lines[i]))[0]
+				for _, word := range fields[1:] {
+					if strings.HasPrefix(word, "DATATYPE=") {
+						pair := strings.FieldsFunc(word, splitOnEqualSign)
+						block.dataType = strings.Trim(pair[1], " ;")
+					}
+					if strings.HasPrefix(word, "GAP=") {
+						pair := strings.FieldsFunc(word, splitOnEqualSign)
+						block.gap = strings.Trim(pair[1], " ;")[0]
+					}
+					if strings.HasPrefix(word, "MISSING=") {
+						pair := strings.FieldsFunc(word, splitOnEqualSign)
+						block.missing = strings.Trim(pair[1], " ;")[0]
+					}
+				}
 			case "MATRIX":
 				for j := i + 1; j < len(lines); j++ {
 					if fields := strings.Fields(lines[j]); len(fields) == 2 {
@@ -314,20 +322,18 @@ func processDataBlock(n *Nexus, lines []string) {
 			}
 		}
 	}
-	n.data = block
+	nex.data = block
 	return
 }
 
+// makeAlignEqual inflates any shorter alignment sequences with the missing character
 func (d *dataBlock) makeAlignEqual() {
-	length := 0
-	for _, v := range d.alignment {
-		if length < len(v) {
-			length = len(v)
-		}
-	}
+	length := d.nchar
 	for i, v := range d.alignment {
-		d.alignment[i] = d.alignment[i] +
-			strings.Repeat(string(d.missing), len(v)-length)
+		if len(v) < length {
+			d.alignment[i] = d.alignment[i] +
+				strings.Repeat(string(d.missing), len(v)-length)
+		}
 	}
 	return
 }

@@ -15,7 +15,7 @@ func TestNexus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open example input: %s\n", datafile)
 	}
-	nex.Read(in)
+	nex.FillFrom(in)
 
 	t.Run("Data", func(t *testing.T) {
 		t.Run("NTax", func(t *testing.T) {
@@ -88,6 +88,19 @@ func TestNexus(t *testing.T) {
 			t.Run("NSeq", func(t *testing.T) {
 				if aln.NSeq() != uint(len(aln)) {
 					t.Errorf("Length of alignment is not the number of sequences")
+				}
+			})
+			t.Run("Seqs only contain ATGC+missing+gap characters", func(t *testing.T) {
+				allowed := "ATGC" + string(nex.Missing()) + string(nex.Gap())
+				for i := uint(0); i < aln.NSeq(); i++ {
+					seq := aln.Seq(i)
+					sum := 0
+					for _, r := range allowed {
+						sum += strings.Count(seq, string(r))
+					}
+					if sum != len(seq) {
+						t.Errorf("Sequence contains invalid characters.")
+					}
 				}
 			})
 		})

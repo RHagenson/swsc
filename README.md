@@ -47,4 +47,4 @@ END;
 
 ## Usage
 
-Both `input` and `output` must be set, otherwise each flag is optional. See `swsc -help` for details.
+Both `input` and `output` must be set, otherwise each flag is optional (however at least one metric should be set). See `swsc -help` for details.

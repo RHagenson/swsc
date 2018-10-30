@@ -151,15 +151,15 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 	for name, sites := range uces {
 		// Get the widest window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
 		for _, pair := range sites {
-			if pair.Start() < start {
-				start = pair.Start()
+			if pair.First() < start {
+				start = pair.First()
 			}
-			if stop < pair.Stop() {
-				stop = pair.Stop()
+			if stop < pair.Second() {
+				stop = pair.Second()
 			}
 		}
 
-		uceAln := aln.Subseq(start, stop+1) // Nexus UCE ranges are inclusive so a +1 adjustment is needed
+		uceAln := aln.Subseq(start, stop)
 		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
 		if *cfg {
 			for _, bestWindow := range bestWindows {

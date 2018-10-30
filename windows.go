@@ -46,11 +46,16 @@ func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, 
 	sses := make(map[string]map[window]float64, 3)
 
 	// 2) Get SSE for each cell in array
-	for _, window := range windows {
+	for _, win := range windows {
 		// Get SSEs for a given window
-		temp := getSses(metrics, window, inVarSites)
+		temp := getSses(metrics, win, inVarSites)
 		for m := range temp {
-			sses[m][window] = sse(temp[m])
+			if _, ok := sses[m][win]; !ok {
+				sses[m] = make(map[window]float64, 0)
+				sses[m][win] = sse(temp[m])
+			} else {
+				sses[m][win] = sse(temp[m])
+			}
 		}
 	}
 

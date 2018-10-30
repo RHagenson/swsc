@@ -31,7 +31,10 @@ func writeOutput(f *os.File, bestWindows map[string]window, metricArray map[stri
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {
-			log.Fatalf("Not enough (%d) alignment sites produced to match metric %s", len(alnSites), k)
+			msg := fmt.Sprintf("Not enough alignment sites "+
+				"(%d) produced to match metric %q of len %d",
+				len(alnSites), k, len(v))
+			log.Fatalf(msg)
 		}
 	}
 

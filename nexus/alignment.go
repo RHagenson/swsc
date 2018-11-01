@@ -50,7 +50,7 @@ func (aln Alignment) Subseq(s, e int) Alignment {
 	return subseqs
 }
 
-// String is sequences separated by a newline character
+// String is al sequences with a newline after each sequence
 func (aln Alignment) String() string {
 	str := ""
 	for i := range aln {

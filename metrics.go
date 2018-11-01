@@ -59,7 +59,7 @@ func sitewiseEntropy(aln nexus.Alignment) []float64 {
 	return entropies
 }
 
-// sitewiseBaseCounts returns a 4xN aeeay of base counts where N is the number of sites
+// sitewiseBaseCounts returns a 4xN array of base counts where N is the number of sites
 func sitewiseBaseCounts(uceAln nexus.Alignment) map[byte][]int {
 	counts := map[byte][]int{
 		'A': make([]int, uceAln.Len()),

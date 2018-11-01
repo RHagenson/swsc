@@ -118,7 +118,7 @@ func main() {
 	length := nex.Alignment().Len()
 	if length/3 <= *minWin {
 		message := fmt.Sprintf(
-			"minWin is too large, maximum allowed value is %d\n",
+			"minWin is too large, maximum allowed value is length/3 or %d\n",
 			length/3,
 		)
 		panic(message)
@@ -165,7 +165,11 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 				pFinderConfigBlock(pfinder, name, bestWindow, start, stop, uceAln)
 			}
 		}
-		writeOutput(out, bestWindows, metricArray, sites, name)
+		alnSites := make([]int, stop-start)
+		for i := range alnSites {
+			alnSites[i] = i + start
+		}
+		writeOutput(out, bestWindows, metricArray, alnSites, name)
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")

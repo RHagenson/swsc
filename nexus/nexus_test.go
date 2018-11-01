@@ -1,6 +1,7 @@
 package nexus_test
 
 import (
+	"math"
 	"os"
 	"reflect"
 	"strings"
@@ -147,4 +148,60 @@ func TestNexus(t *testing.T) {
 			})
 		})
 	})
+	t.Run("Charsets", func(t *testing.T) {
+		cs := nex.Charsets()
+		if len(cs) != 15 {
+			t.Errorf("Expected length %d, got %d", 15, len(cs))
+		}
+		for k, vs := range cs {
+			switch k {
+			case "chr_2828":
+				validateCharSet("chr_2828", vs, 1, 376, t)
+			case "chr_4312":
+				validateCharSet("chr_4312", vs, 377, 627, t)
+			case "chr_4575":
+				validateCharSet("chr_4575", vs, 628, 1060, t)
+			case "chr_4599":
+				validateCharSet("chr_4599", vs, 1061, 1474, t)
+			case "chr_4660":
+				validateCharSet("chr_4660", vs, 1475, 1768, t)
+			case "chr_4748":
+				validateCharSet("chr_4748", vs, 1769, 2413, t)
+			case "chr_4758":
+				validateCharSet("chr_4758", vs, 2414, 2695, t)
+			case "chr_4790":
+				validateCharSet("chr_4790", vs, 2696, 3143, t)
+			case "chr_5022":
+				validateCharSet("chr_5022", vs, 3144, 3476, t)
+			case "chr_5678":
+				validateCharSet("chr_5678", vs, 3477, 3948, t)
+			case "chr_5708":
+				validateCharSet("chr_5708", vs, 3949, 4234, t)
+			case "chr_5739":
+				validateCharSet("chr_5739", vs, 4235, 4568, t)
+			case "chr_1410":
+				validateCharSet("chr_1410", vs, 4569, 5031, t)
+			case "chr_1600":
+				validateCharSet("chr_1600", vs, 5032, 5467, t)
+			case "chr_1757":
+				validateCharSet("chr_1757", vs, 5468, 5786, t)
+			}
+		}
+	})
+}
+
+func validateCharSet(name string, vs []nexus.Pair, f, s int, t *testing.T) {
+	first := math.MaxInt64
+	second := math.MinInt64
+	for _, p := range vs {
+		if p.First() < first {
+			first = p.First()
+		}
+		if second < p.Second() {
+			second = p.Second()
+		}
+	}
+	if first != f && second != s {
+		t.Errorf("Charset %q, expected (%d,%d) got (%d,%d)", name, f, s, first, second)
+	}
 }

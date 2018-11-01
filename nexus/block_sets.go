@@ -22,7 +22,9 @@ func processSetsBlock(lines []string, nex *Nexus) {
 		if len(fields) != 0 {
 			switch fields[0] {
 			case "CHARSET":
-				block.charSets = make(map[string][]Pair, 0)
+				if len(block.charSets) == 0 {
+					block.charSets = make(map[string][]Pair, 0)
+				}
 				charsetName := fields[1]
 				for _, field := range fields[3:] {
 					setVal := strings.TrimRight(field, ";")

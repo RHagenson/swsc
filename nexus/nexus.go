@@ -95,19 +95,19 @@ func (nex *Nexus) Alignment() Alignment {
 }
 
 // Letters is the known (capital) characters allowed by DataType
-// Missing and Gap characters are appended.
+// Missing and Gap characters are NOT appended.
 func (nex *Nexus) Letters() []byte {
 	switch nex.DataType() {
 	case "DNA":
-		return append([]byte("ATGC"), nex.Missing(), nex.Gap())
+		return []byte("ATGC")
 	case "RNA":
-		return append([]byte("AUGC"), nex.Missing(), nex.Gap())
+		return []byte("AUGC")
 	case "Nucleotide": // U should be treated as synonymous to T in this case
-		return append([]byte("ATGC"), nex.Missing(), nex.Gap())
+		return []byte("ATGC")
 	case "Standard":
-		return append([]byte("01"), nex.Missing(), nex.Gap())
+		return []byte("01")
 	case "Protein":
-		return append([]byte("ACDEFGHIKLMNPQRSTVWY"), nex.Missing(), nex.Gap())
+		return []byte("ACDEFGHIKLMNPQRSTVWY")
 	default:
 		msg := fmt.Sprintf("Nexus had invalid data type %s", nex.DataType())
 		panic(msg)

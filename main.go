@@ -187,7 +187,11 @@ func factorialMatrix(vs map[byte][]int) []float64 {
 	}
 	for i := range product {
 		for nuc := range vs {
-			product[i] *= factorial(vs[nuc][i])
+			val, err := factorial(vs[nuc][i])
+			product[i] *= val
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	return product

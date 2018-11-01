@@ -41,7 +41,7 @@ func factorial(v int) (float64, error) {
 	if acc == big.Exact {
 		return val, nil
 	}
-	return val, errors.Errorf("factorial was %s the true value", acc)
+	return val, errors.Errorf("factorial of %d was %s the true value", v, acc)
 }
 
 func minInCountsMap(counts map[byte]int) int {

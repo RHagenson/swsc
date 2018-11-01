@@ -143,13 +143,13 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
+		bestWindows, metricArray := processUce(uceAln, metrics, *minWin, nex.Letters())
 
 		if *cfg {
 			for _, bestWindow := range bestWindows {
 				pfinder.WriteConfigBlock(
 					pfinderFile, name, bestWindow, start, stop,
-					anyBlocksWoAllSites(bestWindow, aln) || anyUndeterminedBlocks(bestWindow, aln), // Write full range if either
+					anyBlocksWoAllSites(bestWindow, aln, nex.Letters()) || anyUndeterminedBlocks(bestWindow, aln, nex.Letters()), // Write full range if either
 				)
 			}
 		}
@@ -178,17 +178,17 @@ func main() {
 
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func processUce(uceAln nexus.Alignment, metrics []string, minWin int) (map[string]window, map[string][]float64) {
+func processUce(uceAln nexus.Alignment, metrics []string, minWin int, chars []byte) (map[string]window, map[string][]float64) {
 	metricBestWindow := make(map[string]window, len(metrics))
 	metricBestVals := make(map[string][]float64, len(metrics))
 
 	windows := getAllWindows(uceAln, minWin)
-	inVarSites := invariantSites(uceAln)
+	inVarSites := invariantSites(uceAln, chars)
 
 	for _, m := range metrics {
 		switch m {
 		case "entropy":
-			metricBestVals["entropy"] = sitewiseEntropy(uceAln)
+			metricBestVals["entropy"] = sitewiseEntropy(uceAln, chars)
 		case "gc":
 			metricBestVals["gc"] = sitewiseGc(uceAln)
 			// case "multi":

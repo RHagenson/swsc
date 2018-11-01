@@ -112,13 +112,13 @@ func writeCfgStartBlock(f *os.File, datasetName string) {
 }
 
 // pFinderConfigBlock appends the proper window size for the UCE
-func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln nexus.Alignment) {
+func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln nexus.Alignment, chars []byte) {
 	block := ""
 	// anyUndeterminedBlocks and anyBlocksWoAllSites are the frequency and absolute ATGC counts
 	// indetermination is by zero frequency or zero count of any letter
 	// Likely not the desired effect.
 	// What is likely supposed to occur is any UCE that is composed of ambiguous(N), missing (?), or gap (-) should be consider indeterminate
-	if bestWindow[1]-bestWindow[0] == stop-start || anyUndeterminedBlocks(bestWindow, uceAln) || anyBlocksWoAllSites(bestWindow, uceAln) {
+	if bestWindow[1]-bestWindow[0] == stop-start || anyUndeterminedBlocks(bestWindow, uceAln, chars) || anyBlocksWoAllSites(bestWindow, uceAln, chars) {
 		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start+1, stop)
 	} else {
 		// left UCE

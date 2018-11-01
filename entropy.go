@@ -6,8 +6,8 @@ import (
 )
 
 // alignmentEntropy calculates entropies of characters
-func alignmentEntropy(aln nexus.Alignment) float64 {
-	bpFreq := bpFreqCalc(aln)
+func alignmentEntropy(aln nexus.Alignment, chars []byte) float64 {
+	bpFreq := bpFreqCalc(aln, chars)
 	entropy := entropyCalc(bpFreq)
 	return entropy
 }

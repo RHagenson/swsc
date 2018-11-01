@@ -101,14 +101,14 @@ func getMinVarWindow(windows []window, alnLength int) window {
 
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters
 // Not the same as anyBlocksWoAllSites()
-func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment) bool {
+func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
 	leftAln := uceAln.Subseq(-1, bestWindow[0])
 	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
 	rightAln := uceAln.Subseq(bestWindow[1], -1)
 
-	leftFreq := bpFreqCalc(leftAln)
-	coreFreq := bpFreqCalc(coreAln)
-	rightFreq := bpFreqCalc(rightAln)
+	leftFreq := bpFreqCalc(leftAln, chars)
+	coreFreq := bpFreqCalc(coreAln, chars)
+	rightFreq := bpFreqCalc(rightAln, chars)
 
 	// If any frequency is NaN
 	// TODO: Likely better with bpFreqCalc returning an error value
@@ -120,14 +120,14 @@ func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment) bool {
 
 // anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
 // Not the same as anyUndeterminedBlocks()
-func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment) bool {
+func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
 	leftAln := uceAln.Subseq(-1, bestWindow[0])
 	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
 	rightAln := uceAln.Subseq(bestWindow[1], -1)
 
-	leftCounts := countBases(leftAln)
-	coreCounts := countBases(coreAln)
-	rightCounts := countBases(rightAln)
+	leftCounts := countBases(leftAln, chars)
+	coreCounts := countBases(coreAln, chars)
+	rightCounts := countBases(rightAln, chars)
 
 	if minInCountsMap(leftCounts) == 0 || minInCountsMap(coreCounts) == 0 || minInCountsMap(rightCounts) == 0 {
 		return true
@@ -150,14 +150,12 @@ func csvColToPlotMatrix(best window, n int) []int8 {
 	return matrix
 }
 
-func bpFreqCalc(aln []string) map[byte]float32 {
-	freqs := map[byte]float32{
-		'A': 0.0,
-		'T': 0.0,
-		'C': 0.0,
-		'G': 0.0,
+func bpFreqCalc(aln []string, bases []byte) map[byte]float32 {
+	freqs := make(map[byte]float32)
+	for _, b := range bases {
+		freqs[b] = 0.0
 	}
-	baseCounts := countBases(aln)
+	baseCounts := countBases(aln, bases)
 	sumCounts := 0
 	for _, count := range baseCounts {
 		sumCounts += count
@@ -171,17 +169,12 @@ func bpFreqCalc(aln []string) map[byte]float32 {
 	return freqs
 }
 
-func countBases(aln nexus.Alignment) map[byte]int {
-	counts := map[byte]int{
-		'A': 0,
-		'T': 0,
-		'G': 0,
-		'C': 0,
+func countBases(aln nexus.Alignment, bases []byte) map[byte]int {
+	counts := make(map[byte]int)
+	for _, b := range bases {
+		counts[b] = 0
 	}
-	allSeqs := ""
-	for _, seq := range aln {
-		allSeqs += seq
-	}
+	allSeqs := aln.String()
 	for _, char := range allSeqs {
 		counts[byte(char)]++
 	}

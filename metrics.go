@@ -50,26 +50,24 @@ import "bitbucket.org/rhagenson/swsc/nexus"
 // 	return counts
 // }
 
-func sitewiseEntropy(aln nexus.Alignment) []float64 {
+func sitewiseEntropy(aln nexus.Alignment, chars []byte) []float64 {
 	entropies := make([]float64, aln.Len())
 	for i := 0; i < aln.Len(); i++ {
 		site := aln.Subseq(i, i+1)
-		entropies[i] = alignmentEntropy(site)
+		entropies[i] = alignmentEntropy(site, chars)
 	}
 	return entropies
 }
 
 // sitewiseBaseCounts returns a 4xN array of base counts where N is the number of sites
-func sitewiseBaseCounts(uceAln nexus.Alignment) map[byte][]int {
-	counts := map[byte][]int{
-		'A': make([]int, uceAln.Len()),
-		'T': make([]int, uceAln.Len()),
-		'C': make([]int, uceAln.Len()),
-		'G': make([]int, uceAln.Len()),
+func sitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
+	counts := make(map[byte][]int)
+	for _, l := range letters {
+		counts[l] = make([]int, uceAln.Len())
 	}
 	for i := 0; i < uceAln.Len(); i++ {
 		site := uceAln.Subseq(i, i+1)
-		bCounts := countBases(site)
+		bCounts := countBases(site, letters)
 		for k, v := range bCounts {
 			counts[k][i] += v
 		}

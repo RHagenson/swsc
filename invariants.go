@@ -3,8 +3,8 @@ package main
 import "bitbucket.org/rhagenson/swsc/nexus"
 
 // invariantSites streams across an alignment and calls sites invariant by their entropy
-func invariantSites(aln nexus.Alignment) []bool {
-	entropies := sitewiseEntropy(aln)
+func invariantSites(aln nexus.Alignment, chars []byte) []bool {
+	entropies := sitewiseEntropy(aln, chars)
 	calls := make([]bool, len(entropies))
 	for i, v := range entropies {
 		if v > 0 {

@@ -26,7 +26,7 @@ var (
 // General use flags
 var (
 	minWin = pflag.Int("minWin", 50, "Minimum window size")
-	cfg    = pflag.Bool("cfg", false, "Write file for PartionFinder2")
+	cfg    = pflag.Bool("cfg", false, "Write config file for PartionFinder2")
 	help   = pflag.Bool("help", false, "Print help and exit")
 )
 
@@ -118,7 +118,7 @@ func main() {
 	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := validateMinWin(nex); err != nil {
+	if err := validateMinWin(nex.Alignment().Len(), *minWin); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -135,9 +135,8 @@ func main() {
 }
 
 // validateMinWin checks if minWin has been set too large to create proper flanks and core
-func validateMinWin(nex *nexus.Nexus) error {
-	length := nex.Alignment().Len()
-	if length/3 <= *minWin {
+func validateMinWin(length, minWin int) error {
+	if length/3 <= minWin {
 		msg := fmt.Sprintf(
 			"minWin is too large, maximum allowed value is length/3 or %d\n",
 			length/3,

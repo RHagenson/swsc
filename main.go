@@ -10,6 +10,8 @@ import (
 
 	"bitbucket.org/rhagenson/swsc/nexus"
 	"bitbucket.org/rhagenson/swsc/pfinder"
+	"bitbucket.org/rhagenson/swsc/ui"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"gonum.org/v1/gonum/stat"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -85,7 +87,7 @@ func main() {
 	setup()
 
 	// Inform user on STDOUT what is being done
-	printHeader(*read)
+	ui.Header(*read)
 
 	// Open input file
 	in, err := os.Open(*read)
@@ -116,23 +118,33 @@ func main() {
 	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	length := nex.Alignment().Len()
-	if length/3 <= *minWin {
-		message := fmt.Sprintf(
-			"minWin is too large, maximum allowed value is length/3 or %d\n",
-			length/3,
-		)
-		panic(message)
+	if err := validateMinWin(nex); err != nil {
+		log.Fatalln(err)
 	}
 
 	// Process the input with selected metrics and minimum window size, internally writing output files
 	processDatasetMetrics(nex, metrics, *minWin, pfinderFile, out)
 
 	// Inform user of where output was written
-	printFooter(*write)
+	ui.Footer(*write)
+
+	// Close the config file if it was opened
 	if *cfg {
 		pfinderFile.Close()
 	}
+}
+
+// validateMinWin checks if minWin has been set too large to create proper flanks and core
+func validateMinWin(nex *nexus.Nexus) error {
+	length := nex.Alignment().Len()
+	if length/3 <= *minWin {
+		msg := fmt.Sprintf(
+			"minWin is too large, maximum allowed value is length/3 or %d\n",
+			length/3,
+		)
+		return errors.New(msg)
+	}
+	return nil
 }
 
 // processDatasetMetrics calculates defined metrics from a *nexus.Nexus

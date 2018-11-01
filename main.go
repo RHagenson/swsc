@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/rhagenson/swsc/pfinder"
 	"bitbucket.org/rhagenson/swsc/ui"
 	"github.com/spf13/pflag"
-	"gonum.org/v1/gonum/stat"
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -180,23 +179,6 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 	return
 }
 
-func factorialMatrix(vs map[byte][]int) []float64 {
-	product := make([]float64, len(vs[0])) // vs['A'][i] * vs['T'][i] * vs['G'][i] * vs['C'][i]
-	for i := range product {
-		product[i] = 1.0
-	}
-	for i := range product {
-		for nuc := range vs {
-			val, err := factorial(vs[nuc][i])
-			product[i] *= val
-			if err != nil {
-				log.Println(err)
-			}
-		}
-	}
-	return product
-}
-
 // invariantSites streams across an alignment and calls sites invariant by their entropy
 func invariantSites(aln nexus.Alignment) []bool {
 	entropies := sitewiseEntropy(aln)
@@ -216,42 +198,6 @@ func allInvariantSites(vs []bool) bool {
 		}
 	}
 	return true
-}
-
-// Compute Sum of Square Errors
-func sse(vs []float64) float64 {
-	mean := stat.Mean(vs, nil)
-	total := 0.0
-	for _, v := range vs {
-		total += math.Pow((v / mean), 2)
-	}
-	return total
-}
-
-func getSse(metric []float64, win window, siteVar []bool) float64 {
-	leftAln := allInvariantSites(siteVar[:win.Start()])
-	coreAln := allInvariantSites(siteVar[win.Start():win.Stop()])
-	rightAln := allInvariantSites(siteVar[win.Stop():])
-
-	if leftAln || coreAln || rightAln {
-		return math.MaxFloat64
-	}
-
-	left := sse(metric[:win.Start()])
-	core := sse(metric[win.Start():win.Stop()])
-	right := sse(metric[win.Stop():])
-	return left + core + right
-}
-
-// getSses generalized getSse over each site window.
-// metrics is [metric name][value index] arranged
-func getSses(metrics map[string][]float64, win window, siteVar []bool) map[string][]float64 {
-	// TODO: Preallocate array
-	sses := make(map[string][]float64, len(metrics))
-	for m := range metrics {
-		sses[m] = append(sses[m], getSse(metrics[m], win, siteVar))
-	}
-	return sses
 }
 
 // processUce computes the corresponding metrics within the minimum window size,
@@ -283,42 +229,4 @@ func processUce(uceAln nexus.Alignment, metrics []string, minWin int) (map[strin
 		}
 	}
 	return metricBestWindow, metricBestVals
-}
-
-func bpFreqCalc(aln []string) map[byte]float32 {
-	freqs := map[byte]float32{
-		'A': 0.0,
-		'T': 0.0,
-		'C': 0.0,
-		'G': 0.0,
-	}
-	baseCounts := countBases(aln)
-	sumCounts := 0
-	for _, count := range baseCounts {
-		sumCounts += count
-	}
-	if sumCounts == 0 {
-		sumCounts = 1
-	}
-	for char, count := range baseCounts {
-		freqs[char] = float32(count / sumCounts)
-	}
-	return freqs
-}
-
-func countBases(aln nexus.Alignment) map[byte]int {
-	counts := map[byte]int{
-		'A': 0,
-		'T': 0,
-		'G': 0,
-		'C': 0,
-	}
-	allSeqs := ""
-	for _, seq := range aln {
-		allSeqs += seq
-	}
-	for _, char := range allSeqs {
-		counts[byte(char)]++
-	}
-	return counts
 }

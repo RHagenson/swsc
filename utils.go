@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 
@@ -42,6 +43,23 @@ func factorial(v int) (float64, error) {
 		return val, nil
 	}
 	return val, errors.Errorf("factorial of %d was %s the true value", v, acc)
+}
+
+func factorialMatrix(vs map[byte][]int) []float64 {
+	product := make([]float64, len(vs[0])) // vs['A'][i] * vs['T'][i] * vs['G'][i] * vs['C'][i]
+	for i := range product {
+		product[i] = 1.0
+	}
+	for i := range product {
+		for nuc := range vs {
+			val, err := factorial(vs[nuc][i])
+			product[i] *= val
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+	return product
 }
 
 func minInCountsMap(counts map[byte]int) int {
@@ -130,4 +148,42 @@ func csvColToPlotMatrix(best window, n int) []int8 {
 		}
 	}
 	return matrix
+}
+
+func bpFreqCalc(aln []string) map[byte]float32 {
+	freqs := map[byte]float32{
+		'A': 0.0,
+		'T': 0.0,
+		'C': 0.0,
+		'G': 0.0,
+	}
+	baseCounts := countBases(aln)
+	sumCounts := 0
+	for _, count := range baseCounts {
+		sumCounts += count
+	}
+	if sumCounts == 0 {
+		sumCounts = 1
+	}
+	for char, count := range baseCounts {
+		freqs[char] = float32(count / sumCounts)
+	}
+	return freqs
+}
+
+func countBases(aln nexus.Alignment) map[byte]int {
+	counts := map[byte]int{
+		'A': 0,
+		'T': 0,
+		'G': 0,
+		'C': 0,
+	}
+	allSeqs := ""
+	for _, seq := range aln {
+		allSeqs += seq
+	}
+	for _, char := range allSeqs {
+		counts[byte(char)]++
+	}
+	return counts
 }

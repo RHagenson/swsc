@@ -120,19 +120,19 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Process the input with selected metrics and minimum window size, internally writing output files
-	// Initialize useful variables
 	var (
-		start = math.MaxInt16 // Minimum position in UCE
-		stop  = math.MinInt16 // Maximum position in UCE, inclusive
-		aln   = nex.Alignment()
-		uces  = nex.Charsets()
-		bar   = pb.StartNew(len(uces))
+		aln  = nex.Alignment()        // Sequence alignment
+		uces = nex.Charsets()         // UCE set
+		bar  = pb.StartNew(len(uces)) // Progress bar
 	)
 
 	// Process each UCE in turn
 	for name, sites := range uces {
-		// Get the widest window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
+		var (
+			start = math.MaxInt16 // Minimum position in UCE
+			stop  = math.MinInt16 // Maximum position in UCE
+		)
+		// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
 		for _, pair := range sites {
 			if pair.First() < start {
 				start = pair.First()
@@ -162,9 +162,7 @@ func main() {
 	}
 	bar.FinishPrint("Finished processing UCEs")
 	if *cfg {
-		for range metrics {
-			writeCfgEndBlock(pfinderFile, datasetName)
-		}
+		pfinder.WriteEndBlock(pfinderFile)
 	}
 
 	// Inform user of where output was written

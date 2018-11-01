@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 )
@@ -91,4 +92,22 @@ func (nex *Nexus) Charsets() map[string][]Pair {
 // Alignment returns a copy of the internal alignment
 func (nex *Nexus) Alignment() Alignment {
 	return nex.data.alignment
+}
+
+func (nex *Nexus) Letters() []byte {
+	switch nex.DataType() {
+	case "DNA":
+		return append([]byte("ATGC"), nex.Missing(), nex.Gap())
+	case "RNA":
+		return append([]byte("AUGC"), nex.Missing(), nex.Gap())
+	case "Nucleotide": // U should be treated as synonymous to T in this case
+		return append([]byte("ATGC"), nex.Missing(), nex.Gap())
+	case "Standard":
+		return append([]byte("01"), nex.Missing(), nex.Gap())
+	case "Protein":
+		return append([]byte("ACDEFGHIKLMNPQRSTVWY"), nex.Missing(), nex.Gap())
+	default:
+		msg := fmt.Sprintf("Nexus had invalid data type %s", nex.DataType())
+		panic(msg)
+	}
 }

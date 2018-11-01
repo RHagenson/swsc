@@ -11,7 +11,6 @@ import (
 	"bitbucket.org/rhagenson/swsc/nexus"
 	"bitbucket.org/rhagenson/swsc/pfinder"
 	"bitbucket.org/rhagenson/swsc/ui"
-	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"gonum.org/v1/gonum/stat"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -132,18 +131,6 @@ func main() {
 	if *cfg {
 		pfinderFile.Close()
 	}
-}
-
-// validateMinWin checks if minWin has been set too large to create proper flanks and core
-func validateMinWin(length, minWin int) error {
-	if length/3 <= minWin {
-		msg := fmt.Sprintf(
-			"minWin is too large, maximum allowed value is length/3 or %d\n",
-			length/3,
-		)
-		return errors.New(msg)
-	}
-	return nil
 }
 
 // processDatasetMetrics calculates defined metrics from a *nexus.Nexus

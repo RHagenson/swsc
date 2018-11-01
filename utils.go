@@ -1,11 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"math"
+	"math/big"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/stat"
 )
+
+// validateMinWin checks if minWin has been set too large to create proper flanks and core
+func validateMinWin(length, minWin int) error {
+	if length/3 <= minWin {
+		msg := fmt.Sprintf(
+			"minWin is too large, maximum allowed value is length/3 or %d\n",
+			length/3,
+		)
+		return errors.New(msg)
+	}
+	return nil
+}
 
 func minFloat64(vs ...float64) float64 {
 	min := math.MaxFloat64
@@ -17,13 +32,16 @@ func minFloat64(vs ...float64) float64 {
 	return min
 }
 
-// TODO: Should use math.Big to prevent overflow
-func factorial(v int) float64 {
-	fact := 1
+func factorial(v int) (float64, error) {
+	fact := big.NewFloat(1)
 	for i := 1; i <= v; i++ {
-		fact *= i
+		fact.Mul(fact, big.NewFloat(float64(i)))
 	}
-	return float64(fact)
+	val, acc := fact.Float64()
+	if acc == big.Exact {
+		return val, nil
+	}
+	return val, errors.Errorf("factorial was %s the true value", acc)
 }
 
 func minInCountsMap(counts map[byte]int) int {

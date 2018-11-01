@@ -112,8 +112,7 @@ func main() {
 	}
 
 	// Read in the input Nexus file
-	nex := nexus.New()
-	nex.Read(in)
+	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
 	length := nex.Alignment().Len()

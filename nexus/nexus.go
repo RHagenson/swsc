@@ -94,6 +94,8 @@ func (nex *Nexus) Alignment() Alignment {
 	return nex.data.alignment
 }
 
+// Letters is the known (capital) characters allowed by DataType
+// Missing and Gap characters are appended.
 func (nex *Nexus) Letters() []byte {
 	switch nex.DataType() {
 	case "DNA":

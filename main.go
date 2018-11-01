@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
+	"bitbucket.org/rhagenson/swsc/pfinder"
 	"github.com/spf13/pflag"
 	"gonum.org/v1/gonum/stat"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -37,7 +38,7 @@ var (
 // Global reference vars
 var (
 	pFinderFileName = ""
-	pfinder         = new(os.File)
+	pfinderFile     = new(os.File)
 	datasetName     = ""
 	metrics         = make([]string, 0)
 )
@@ -104,11 +105,11 @@ func main() {
 
 	// If PartitionFinder2 config file is desired, write its header/starting block
 	if *cfg {
-		pfinder, err = os.Create(pFinderFileName)
+		pfinderFile, err = os.Create(pFinderFileName)
 		if err != nil {
 			log.Fatalf("Could not read file: %s", err)
 		}
-		writeCfgStartBlock(pfinder, datasetName)
+		pfinder.WriteStartBlock(pfinderFile, datasetName)
 	}
 
 	// Read in the input Nexus file
@@ -125,12 +126,12 @@ func main() {
 	}
 
 	// Process the input with selected metrics and minimum window size, internally writing output files
-	processDatasetMetrics(nex, metrics, *minWin, pfinder, out)
+	processDatasetMetrics(nex, metrics, *minWin, pfinderFile, out)
 
 	// Inform user of where output was written
 	printFooter(*write)
 	if *cfg {
-		pfinder.Close()
+		pfinderFile.Close()
 	}
 }
 

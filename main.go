@@ -121,21 +121,7 @@ func main() {
 	}
 
 	// Process the input with selected metrics and minimum window size, internally writing output files
-	processDatasetMetrics(nex, metrics, *minWin, pfinderFile, out)
-
-	// Inform user of where output was written
-	ui.Footer(*write)
-
-	// Close the config file if it was opened
-	if *cfg {
-		pfinderFile.Close()
-	}
-}
-
-// processDatasetMetrics calculates defined metrics from a *nexus.Nexus
-// using a minimum sliding window size
-func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder, out *os.File) {
-	// Initialize local variables
+	// Initialize useful variables
 	var (
 		start = math.MaxInt16 // Minimum position in UCE
 		stop  = math.MinInt16 // Maximum position in UCE, inclusive
@@ -158,9 +144,13 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 
 		uceAln := aln.Subseq(start, stop)
 		bestWindows, metricArray := processUce(uceAln, metrics, *minWin)
+
 		if *cfg {
 			for _, bestWindow := range bestWindows {
-				pFinderConfigBlock(pfinder, name, bestWindow, start, stop, uceAln)
+				pfinder.WriteConfigBlock(
+					pfinderFile, name, bestWindow, start, stop,
+					anyBlocksWoAllSites(bestWindow, aln) || anyUndeterminedBlocks(bestWindow, aln), // Write full range if either
+				)
 			}
 		}
 		alnSites := make([]int, stop-start)
@@ -173,31 +163,17 @@ func processDatasetMetrics(nex *nexus.Nexus, metrics []string, win int, pfinder,
 	bar.FinishPrint("Finished processing UCEs")
 	if *cfg {
 		for range metrics {
-			writeCfgEndBlock(pfinder, datasetName)
+			writeCfgEndBlock(pfinderFile, datasetName)
 		}
 	}
-	return
-}
 
-// invariantSites streams across an alignment and calls sites invariant by their entropy
-func invariantSites(aln nexus.Alignment) []bool {
-	entropies := sitewiseEntropy(aln)
-	calls := make([]bool, len(entropies))
-	for i, v := range entropies {
-		if v > 0 {
-			calls[i] = true
-		}
-	}
-	return calls
-}
+	// Inform user of where output was written
+	ui.Footer(*write)
 
-func allInvariantSites(vs []bool) bool {
-	for _, v := range vs {
-		if v {
-			return false
-		}
+	// Close the config file if it was opened
+	if *cfg {
+		pfinderFile.Close()
 	}
-	return true
 }
 
 // processUce computes the corresponding metrics within the minimum window size,

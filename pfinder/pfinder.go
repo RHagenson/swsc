@@ -54,7 +54,7 @@ func WriteConfigBlock(f *os.File, name string, bestWindow [2]int, start, stop in
 }
 
 // WriteEndBlock appends the end block to the specified .cfg file
-func WriteEndBlock(f *os.File, datasetName string) {
+func WriteEndBlock(f *os.File) {
 	search := "rclusterf"
 	block := "\n" +
 		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +

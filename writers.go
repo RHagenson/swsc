@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	"bitbucket.org/rhagenson/swsc/nexus"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
@@ -75,67 +73,5 @@ func writeOutput(f *os.File, bestWindows map[string]window, metricArray map[stri
 
 	if err := file.WriteAll(d); err != nil {
 		log.Printf("Encountered %s in writing to file %s", err, f.Name())
-	}
-}
-
-// writeCfgEndBlock appends the end block to the specified .cfg file
-func writeCfgEndBlock(f *os.File, datasetName string) {
-	search := "rclusterf"
-	block := "\n" +
-		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +
-		"[schemes]\n" +
-		fmt.Sprintf("search = %s;\n\n", search)
-	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Failed to write .cfg end block: %s", err)
-	}
-}
-
-// writeCfgStartBlock truncates the file to only the start block
-func writeCfgStartBlock(f *os.File, datasetName string) {
-	branchLengths := "linked"
-	models := "GTR+G"
-	modelSelection := "aicc"
-
-	block := "## ALIGNMENT FILE ##\n" +
-		fmt.Sprintf("alignment = %s.nex;\n\n", datasetName) +
-		"## BRANCHLENGTHS: linked | unlinked ##\n" +
-		fmt.Sprintf("branchlengths = %s;\n\n", branchLengths) +
-		"MODELS OF EVOLUTION: all | allx | mybayes | beast | gamma | gammai <list> ##\n" +
-		fmt.Sprintf("models = %s;\n\n", models) +
-		"# MODEL SELECTION: AIC | AICc | BIC #\n" +
-		fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +
-		"## DATA BLOCKS: see manual for how to define ##\n" +
-		"[data_blocks]\n"
-	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Could not write PartionFinder2 file: %s", err)
-	}
-}
-
-// pFinderConfigBlock appends the proper window size for the UCE
-func pFinderConfigBlock(f *os.File, name string, bestWindow window, start, stop int, uceAln nexus.Alignment, chars []byte) {
-	block := ""
-	// anyUndeterminedBlocks and anyBlocksWoAllSites are the frequency and absolute ATGC counts
-	// indetermination is by zero frequency or zero count of any letter
-	// Likely not the desired effect.
-	// What is likely supposed to occur is any UCE that is composed of ambiguous(N), missing (?), or gap (-) should be consider indeterminate
-	if bestWindow[1]-bestWindow[0] == stop-start || anyUndeterminedBlocks(bestWindow, uceAln, chars) || anyBlocksWoAllSites(bestWindow, uceAln, chars) {
-		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start+1, stop)
-	} else {
-		// left UCE
-		leftStart := start + 1
-		leftEnd := start + bestWindow[0]
-		// core UCE
-		coreStart := leftEnd + 1
-		coreEnd := start + bestWindow[1]
-		// right UCE
-		rightStart := coreEnd + 1
-		rightEnd := stop
-		block = fmt.Sprintf("%s_core = %d-%d;\n", name, coreStart, coreEnd) +
-			fmt.Sprintf("%s_left = %d-%d;\n", name, leftStart, leftEnd) +
-			fmt.Sprintf("%s_right = %d-%d;\n", name, rightStart, rightEnd)
-	}
-
-	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Failed to write .cfg config block: %s", err)
 	}
 }

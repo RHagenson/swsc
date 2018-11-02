@@ -25,7 +25,7 @@ func writeOutputHeader(f *os.File) {
 }
 
 // writeOutput appends partitioning data to output
-func writeOutput(f *os.File, bestWindows map[string]window, metricArray map[string][]float64, alnSites []int, name string) {
+func writeOutput(f *os.File, bestWindows map[Metric]window, metricArray map[Metric][]float64, alnSites []int, name string) {
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {
@@ -64,7 +64,7 @@ func writeOutput(f *os.File, bestWindows map[string]window, metricArray map[stri
 				string(i),               // UCE site position absolute
 				string(window.Start()),  // Best window for metric, start
 				string(window.Stop()),   // Best window for metric, stop
-				m,                       // Metric under analysis
+				m.String(),              // Metric under analysis
 				fmt.Sprintf("%f", v[i]), // Metric value at site position
 				string(matrixVals[i]),   // Prior to best window (-1), in best window (0), after window (+1)
 			})

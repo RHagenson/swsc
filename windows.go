@@ -37,13 +37,13 @@ func generateWindows(len, min int) []window {
 	return windows
 }
 
-func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, inVarSites []bool) map[string]window {
+func getBestWindows(metrics map[Metric][]float64, windows []window, alnLen int, inVarSites []bool) map[Metric]window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
 	// data = nil, allocate new backing slice
 	// Each "cell" of the matrix created by {metric}x{window} is the position-wise SSE for that combination
-	sses := make(map[string]map[window]float64, 3)
+	sses := make(map[Metric]map[window]float64, 3)
 
 	// 2) Get SSE for each cell in array
 	for _, win := range windows {
@@ -60,7 +60,7 @@ func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, 
 	}
 
 	// Find minimum values and record the window(s) they occur in
-	minMetricWindows := make(map[string][]window)
+	minMetricWindows := make(map[Metric][]window)
 	for m, windows := range sses {
 		bestVal := math.MaxFloat64
 		for w, val := range windows {
@@ -73,7 +73,7 @@ func getBestWindows(metrics map[string][]float64, windows []window, alnLen int, 
 		}
 
 	}
-	absMinWindow := make(map[string]window)
+	absMinWindow := make(map[Metric]window)
 	for m := range minMetricWindows {
 		absMinWindow[m] = getMinVarWindow(minMetricWindows[m], alnLen)
 	}

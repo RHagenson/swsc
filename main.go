@@ -39,7 +39,7 @@ var (
 	pFinderFileName = ""
 	pfinderFile     = new(os.File)
 	datasetName     = ""
-	metrics         = make([]string, 0)
+	metrics         = make([]Metric, 0)
 )
 
 func setup() {
@@ -72,10 +72,10 @@ func setup() {
 		pFinderFileName = path.Join(path.Dir(*read), datasetName) + ".cfg"
 	}
 	if *entropy {
-		metrics = append(metrics, "entropy")
+		metrics = append(metrics, Entropy)
 	}
 	if *gc {
-		metrics = append(metrics, "gc")
+		metrics = append(metrics, GC)
 	}
 }
 
@@ -175,20 +175,20 @@ func main() {
 
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func processUce(uceAln nexus.Alignment, metrics []string, minWin int, chars []byte) (map[string]window, map[string][]float64) {
+func processUce(uceAln nexus.Alignment, metrics []Metric, minWin int, chars []byte) (map[Metric]window, map[Metric][]float64) {
 	var (
-		metricBestWindow = make(map[string]window, len(metrics))
-		metricBestVals   = make(map[string][]float64, len(metrics))
+		metricBestWindow = make(map[Metric]window, len(metrics))
+		metricBestVals   = make(map[Metric][]float64, len(metrics))
 		windows          = getAllWindows(uceAln, minWin)
 		inVarSites       = invariantSites(uceAln, chars)
 	)
 
 	for _, m := range metrics {
 		switch m {
-		case "entropy":
-			metricBestVals["entropy"] = sitewiseEntropy(uceAln, chars)
-		case "gc":
-			metricBestVals["gc"] = sitewiseGc(uceAln)
+		case Entropy:
+			metricBestVals[Entropy] = sitewiseEntropy(uceAln, chars)
+		case GC:
+			metricBestVals[GC] = sitewiseGc(uceAln)
 			// case "multi":
 			// 	metricBestVals["multi"] = sitewiseMulti(uceAln)
 		}

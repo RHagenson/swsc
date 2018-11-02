@@ -2,6 +2,33 @@ package main
 
 import "bitbucket.org/rhagenson/swsc/nexus"
 
+// Metric is an enum type denoting possible sitewise metrics to calculate
+type Metric int
+
+const (
+	// Entropy is Shannon's entropy
+	Entropy Metric = iota
+
+	// GC is GC percentage
+	GC
+
+	// Multi is the multinomial measurement
+	Multi
+)
+
+func (m Metric) String() string {
+	switch m {
+	case Entropy:
+		return "Entropy"
+	case GC:
+		return "GC"
+	case Multi:
+		return "Multinomial"
+	default:
+		return ""
+	}
+}
+
 // func sitewiseMulti(uceAln nexus.Alignment) []float64 {
 // 	uceCounts := sitewiseBaseCounts(uceAln)
 // 	uceSums := make([]float64, len(uceCounts))

@@ -7,12 +7,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Window is an inclusive window into a UCE
 type Window [2]int
 
+// Start is the starting position of a window
 func (w *Window) Start() int {
 	return w[0]
 }
 
+// Stop is the inclusive stopping position of a window
 func (w *Window) Stop() int {
 	return w[1]
 }

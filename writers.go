@@ -49,11 +49,6 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 		names[i] = name
 	}
 
-	matrixVals := make([]int8, N)
-	for _, w := range bestWindows {
-		matrixVals = csvColToPlotMatrix(w, N)
-	}
-
 	file := csv.NewWriter(f)
 	for m, v := range metricArray {
 		window := bestWindows[m]
@@ -66,10 +61,21 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 				strconv.Itoa(window.Stop()),           // Best window for metric, stop
 				m.String(),                            // Metric under analysis
 				strconv.FormatFloat(v[i], 'e', 5, 64), // Metric value at site position
-				strconv.Itoa(int(matrixVals[i])),      // Prior to best window (-1), in best window (0), after window (+1)
+				strconv.Itoa(relToWindow(window.Start(), i, window.Stop())), // -1 if before window, 0 if in window, 1 if after window
 			}); err != nil {
 				ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
 			}
 		}
 	}
+}
+
+// relToWindow is a codified function for use in later tools of whether the current alignment position
+// is before (-1), in (0), or after (1) the window
+func relToWindow(start, cur, stop int) int {
+	if cur < start {
+		return -1 // Before window
+	} else if stop < cur {
+		return 1 // After window
+	}
+	return 0 // In Window
 }

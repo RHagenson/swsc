@@ -140,21 +140,6 @@ func useFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool 
 	return anyBlocksWoAllSites(bestWindow, uceAln, chars) || anyUndeterminedBlocks(bestWindow, uceAln, chars)
 }
 
-func csvColToPlotMatrix(best Window, n int) []int8 {
-	matrix := make([]int8, n)
-	for i := range matrix {
-		switch {
-		case i < best[0]:
-			matrix[i] = -1
-		case best[0] < i && i < best[1]:
-			matrix[i] = 0
-		case best[1] < i:
-			matrix[i] = 1
-		}
-	}
-	return matrix
-}
-
 func bpFreqCalc(aln []string, bases []byte) map[byte]float64 {
 	freqs := make(map[byte]float64)
 	for _, b := range bases {

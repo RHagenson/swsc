@@ -23,7 +23,7 @@ var (
 // General use flags
 var (
 	minWin = pflag.Int("minWin", 50, "Minimum window size")
-	cfg    = pflag.Bool("cfg", false, "Write config file for PartionFinder2")
+	cfg    = pflag.Bool("cfg", false, "Write config file for PartionFinder2 (same dir as --output)")
 	help   = pflag.Bool("help", false, "Print help and exit")
 )
 
@@ -69,7 +69,7 @@ func setup() {
 	// Set global vars
 	datasetName = strings.TrimRight(path.Base(*read), ".nex")
 	if *cfg {
-		pFinderFileName = path.Join(path.Dir(*read), datasetName) + ".cfg"
+		pFinderFileName = path.Join(path.Dir(*write), datasetName) + ".cfg"
 	}
 	if *entropy {
 		metrics = append(metrics, Entropy)

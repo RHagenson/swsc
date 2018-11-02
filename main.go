@@ -54,15 +54,15 @@ func setup() {
 	switch {
 	case *read == "" && *write == "":
 		pflag.Usage()
-		log.Fatalf("Must provide input and output names")
+		ui.Errorf("Must provide input and output names")
 	case !strings.HasSuffix(*read, ".nex"):
-		log.Fatalf("Input expected in .nex format, got %s format", path.Ext(*read))
+		ui.Errorf("Input expected in .nex format, got %s format", path.Ext(*read))
 	case !strings.HasSuffix(*write, ".csv"):
-		log.Fatalf("Output written in .csv format, got %s format", path.Ext(*write))
+		ui.Errorf("Output written in .csv format, got %s format", path.Ext(*write))
 	case *minWin < 0:
-		log.Fatalf("Window size must be positive, got %d", *minWin)
+		ui.Errorf("Window size must be positive, got %d", *minWin)
 	case !(*entropy || *gc):
-		log.Fatalf("At least one metric is required")
+		ui.Errorf("At least one metric is required")
 	default:
 		fmt.Printf("Arguments are reasonable")
 	}
@@ -91,13 +91,13 @@ func main() {
 	in, err := os.Open(*read)
 	defer in.Close()
 	if err != nil {
-		log.Fatalf("Could not read input file: %s", err)
+		ui.Errorf("Could not read input file: %s", err)
 	}
 
 	out, err := os.Create(*write)
 	defer out.Close()
 	if err != nil {
-		log.Fatalf("Could not create output file: %s", err)
+		ui.Errorf("Could not create output file: %s", err)
 	}
 
 	// Write the header to the output file (clears output file if present)
@@ -107,7 +107,7 @@ func main() {
 	if *cfg {
 		pfinderFile, err = os.Create(pFinderFileName)
 		if err != nil {
-			log.Fatalf("Could not read file: %s", err)
+			ui.Errorf("Could not read file: %s", err)
 		}
 		pfinder.WriteStartBlock(pfinderFile, datasetName)
 	}

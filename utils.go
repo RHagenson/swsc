@@ -82,7 +82,7 @@ func maxInFreqMap(freqs map[byte]float32) float32 {
 	return max
 }
 
-func getMinVarWindow(windows []window, alnLength int) window {
+func getMinVarWindow(windows []Window, alnLength int) Window {
 	best := float64(math.MaxInt16)
 	bestWindow := windows[0]
 
@@ -101,7 +101,7 @@ func getMinVarWindow(windows []window, alnLength int) window {
 
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters
 // Not the same as anyBlocksWoAllSites()
-func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
+func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
 	leftAln := uceAln.Subseq(-1, bestWindow[0])
 	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
 	rightAln := uceAln.Subseq(bestWindow[1], -1)
@@ -120,7 +120,7 @@ func anyUndeterminedBlocks(bestWindow window, uceAln nexus.Alignment, chars []by
 
 // anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
 // Not the same as anyUndeterminedBlocks()
-func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
+func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
 	leftAln := uceAln.Subseq(-1, bestWindow[0])
 	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
 	rightAln := uceAln.Subseq(bestWindow[1], -1)
@@ -136,11 +136,11 @@ func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment, chars []byte
 }
 
 // useFullRange checks invariant conditions and returns if any are true
-func useFullRange(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
+func useFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
 	return anyBlocksWoAllSites(bestWindow, uceAln, chars) || anyUndeterminedBlocks(bestWindow, uceAln, chars)
 }
 
-func csvColToPlotMatrix(best window, n int) []int8 {
+func csvColToPlotMatrix(best Window, n int) []int8 {
 	matrix := make([]int8, n)
 	for i := range matrix {
 		switch {

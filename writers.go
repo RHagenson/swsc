@@ -25,7 +25,7 @@ func writeOutputHeader(f *os.File) {
 }
 
 // writeOutput appends partitioning data to output
-func writeOutput(f *os.File, bestWindows map[Metric]window, metricArray map[Metric][]float64, alnSites []int, name string) {
+func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {

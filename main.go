@@ -175,9 +175,9 @@ func main() {
 
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func processUce(uceAln nexus.Alignment, metrics []Metric, minWin int, chars []byte) (map[Metric]window, map[Metric][]float64) {
+func processUce(uceAln nexus.Alignment, metrics []Metric, minWin int, chars []byte) (map[Metric]Window, map[Metric][]float64) {
 	var (
-		metricBestWindow = make(map[Metric]window, len(metrics))
+		metricBestWindow = make(map[Metric]Window, len(metrics))
 		metricBestVals   = make(map[Metric][]float64, len(metrics))
 		windows          = getAllWindows(uceAln, minWin)
 		inVarSites       = invariantSites(uceAln, chars)

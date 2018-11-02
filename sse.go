@@ -16,7 +16,7 @@ func sse(vs []float64) float64 {
 	return total
 }
 
-func getSse(metric []float64, win window, siteVar []bool) float64 {
+func getSse(metric []float64, win Window, siteVar []bool) float64 {
 	leftAln := allInvariantSites(siteVar[:win.Start()])
 	coreAln := allInvariantSites(siteVar[win.Start():win.Stop()])
 	rightAln := allInvariantSites(siteVar[win.Stop():])
@@ -33,7 +33,7 @@ func getSse(metric []float64, win window, siteVar []bool) float64 {
 
 // getSses generalized getSse over each site window.
 // metrics is [metric name][value index] arranged
-func getSses(metrics map[Metric][]float64, win window, siteVar []bool) map[Metric][]float64 {
+func getSses(metrics map[Metric][]float64, win Window, siteVar []bool) map[Metric][]float64 {
 	// TODO: Preallocate array
 	sses := make(map[Metric][]float64, len(metrics))
 	for m := range metrics {

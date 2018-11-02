@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
@@ -59,14 +60,14 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 		window := bestWindows[m]
 		for i := 0; i < N; i++ {
 			file.Write([]string{
-				name,                    // UCE name
-				string(uceSites[i]),     // UCE site position relative to center of alignment
-				string(i),               // UCE site position absolute
-				string(window.Start()),  // Best window for metric, start
-				string(window.Stop()),   // Best window for metric, stop
-				m.String(),              // Metric under analysis
-				fmt.Sprintf("%f", v[i]), // Metric value at site position
-				string(matrixVals[i]),   // Prior to best window (-1), in best window (0), after window (+1)
+				name,                                  // UCE name
+				strconv.Itoa(uceSites[i]),             // UCE site position relative to center of alignment
+				strconv.Itoa(i),                       // UCE site position absolute
+				strconv.Itoa(window.Start()),          // Best window for metric, start
+				strconv.Itoa(window.Stop()),           // Best window for metric, stop
+				m.String(),                            // Metric under analysis
+				strconv.FormatFloat(v[i], 'e', 5, 64), // Metric value at site position
+				strconv.Itoa(int(matrixVals[i])),      // Prior to best window (-1), in best window (0), after window (+1)
 			})
 		}
 	}

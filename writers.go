@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
+
+	"bitbucket.org/rhagenson/swsc/ui"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
@@ -20,7 +21,7 @@ func writeOutputHeader(f *os.File) {
 	file := csv.NewWriter(f)
 	if err := file.Write(header); err != nil {
 		file.Flush()
-		log.Printf("Problem writing %s, encountered %s.", f.Name(), err)
+		ui.Errorf("Problem writing %s, encountered %s.", f.Name(), err)
 	}
 	return
 }
@@ -33,7 +34,7 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 			msg := fmt.Sprintf("Not enough alignment sites "+
 				"(%d) produced to match metric %q of len %d",
 				len(alnSites), k, len(v))
-			log.Fatalf(msg)
+			ui.Errorf(msg)
 		}
 	}
 
@@ -73,6 +74,6 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 	}
 
 	if err := file.WriteAll(d); err != nil {
-		log.Printf("Encountered %s in writing to file %s", err, f.Name())
+		ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
 	}
 }

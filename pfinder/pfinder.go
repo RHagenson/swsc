@@ -2,8 +2,9 @@ package pfinder
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	"bitbucket.org/rhagenson/swsc/ui"
 )
 
 // WriteStartBlock writes PartitionFinder2 configuration header/start block
@@ -23,7 +24,7 @@ func WriteStartBlock(f *os.File, datasetName string) {
 		"## DATA BLOCKS: see manual for how to define ##\n" +
 		"[data_blocks]\n"
 	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Could not write PartionFinder2 file: %s", err)
+		ui.Errorf("Could not write PartionFinder2 file: %s", err)
 	}
 }
 
@@ -49,7 +50,7 @@ func WriteConfigBlock(f *os.File, name string, bestWindow [2]int, start, stop in
 	}
 
 	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Failed to write .cfg config block: %s", err)
+		ui.Errorf("Failed to write .cfg config block: %s", err)
 	}
 }
 
@@ -61,6 +62,6 @@ func WriteEndBlock(f *os.File) {
 		"[schemes]\n" +
 		fmt.Sprintf("search = %s;\n\n", search)
 	if _, err := f.WriteString(block); err != nil {
-		log.Fatalf("Failed to write .cfg end block: %s", err)
+		ui.Errorf("Failed to write .cfg end block: %s", err)
 	}
 }

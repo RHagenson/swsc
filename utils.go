@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"math/big"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
+	"bitbucket.org/rhagenson/swsc/ui"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/stat"
 )
@@ -55,7 +55,7 @@ func factorialMatrix(vs map[byte][]int) []float64 {
 			val, err := factorial(vs[nuc][i])
 			product[i] *= val
 			if err != nil {
-				log.Println(err)
+				ui.Errorf("%v", err)
 			}
 		}
 	}

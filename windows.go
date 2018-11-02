@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
+	"github.com/pkg/errors"
 )
 
 type Window [2]int
@@ -17,7 +18,7 @@ func (w *Window) Stop() int {
 }
 
 func getAllWindows(uceAln nexus.Alignment, minWin int) []Window {
-	windows := generateWindows(uceAln.Len(), minWin)
+	windows, _ := generateWindows(uceAln.Len(), minWin)
 	return windows
 }
 
@@ -26,15 +27,18 @@ func getAllWindows(uceAln nexus.Alignment, minWin int) []Window {
 //   1) at least minimum window from the start of the UCE (ie, first start at minimum+1)
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
-func generateWindows(len, min int) []Window {
+// TODO: Preallocate windows array. Tried my hand at this once and hit a mental block.
+func generateWindows(length, min int) ([]Window, error) {
+	if min > length/3 {
+		return nil, errors.New("minimum window size is too large")
+	}
 	windows := make([]Window, 0)
-	// TODO: Should preallocate windows array and fill via start+end-minWin indexing
-	for start := min + 1; start+min < len; start++ {
-		for end := start + min + 1; end+min <= len; end++ {
+	for start := min; start <= length-min-min; start++ {
+		for end := start + min; end+min <= length; end++ {
 			windows = append(windows, Window{start, end})
 		}
 	}
-	return windows
+	return windows, nil
 }
 
 func getBestWindows(metrics map[Metric][]float64, windows []Window, alnLen int, inVarSites []bool) map[Metric]Window {

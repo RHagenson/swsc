@@ -43,8 +43,8 @@ func WriteConfigBlock(f *os.File, name string, bestWindow [2]int, start, stop in
 		// right UCE
 		rightStart := coreEnd + 1
 		rightEnd := stop
-		block = fmt.Sprintf("%s_core = %d-%d;\n", name, coreStart, coreEnd) +
-			fmt.Sprintf("%s_left = %d-%d;\n", name, leftStart, leftEnd) +
+		block = fmt.Sprintf("%s_left = %d-%d;\n", name, leftStart, leftEnd) +
+			fmt.Sprintf("%s_core = %d-%d;\n", name, coreStart, coreEnd) +
 			fmt.Sprintf("%s_right = %d-%d;\n", name, rightStart, rightEnd)
 	}
 

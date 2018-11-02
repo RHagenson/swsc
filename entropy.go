@@ -13,7 +13,7 @@ func alignmentEntropy(aln nexus.Alignment, chars []byte) float64 {
 }
 
 // entropyCalc computes Shannon's entropy after removing elements equal to zero as Ln(0) == -Inf
-func entropyCalc(bpFreqs map[byte]float32) float64 {
+func entropyCalc(bpFreqs map[byte]float64) float64 {
 	freqs := make([]float64, 0)
 	for _, val := range bpFreqs {
 		// Ln(0) == -Inf, Shannon's entropy uses Ln()

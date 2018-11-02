@@ -72,8 +72,8 @@ func minInCountsMap(counts map[byte]int) int {
 	return min
 }
 
-func maxInFreqMap(freqs map[byte]float32) float32 {
-	max := float32(math.SmallestNonzeroFloat32)
+func maxInFreqMap(freqs map[byte]float64) float64 {
+	max := math.SmallestNonzeroFloat64
 	for _, val := range freqs {
 		if max < val {
 			max = val
@@ -155,21 +155,21 @@ func csvColToPlotMatrix(best Window, n int) []int8 {
 	return matrix
 }
 
-func bpFreqCalc(aln []string, bases []byte) map[byte]float32 {
-	freqs := make(map[byte]float32)
+func bpFreqCalc(aln []string, bases []byte) map[byte]float64 {
+	freqs := make(map[byte]float64)
 	for _, b := range bases {
 		freqs[b] = 0.0
 	}
 	baseCounts := countBases(aln, bases)
-	sumCounts := 0
+	sumCounts := 0.0
 	for _, count := range baseCounts {
-		sumCounts += count
+		sumCounts += float64(count)
 	}
 	if sumCounts == 0 {
-		sumCounts = 1
+		sumCounts = 1.0
 	}
 	for char, count := range baseCounts {
-		freqs[char] = float32(count / sumCounts)
+		freqs[char] = float64(count) / sumCounts
 	}
 	return freqs
 }

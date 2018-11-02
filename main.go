@@ -148,7 +148,7 @@ func main() {
 			for _, bestWindow := range bestWindows {
 				pfinder.WriteConfigBlock(
 					pfinderFile, name, bestWindow, start, stop,
-					anyBlocksWoAllSites(bestWindow, aln, nex.Letters()) || anyUndeterminedBlocks(bestWindow, aln, nex.Letters()), // Write full range if either
+					useFullRange(bestWindow, aln, nex.Letters()),
 				)
 			}
 		}
@@ -194,9 +194,7 @@ func processUce(uceAln nexus.Alignment, metrics []string, minWin int, chars []by
 		}
 	}
 	if len(windows) > 1 {
-		metricBestWindow = getBestWindows(metricBestVals,
-			windows, uceAln.Len(), inVarSites,
-		)
+		metricBestWindow = getBestWindows(metricBestVals, windows, uceAln.Len(), inVarSites)
 	} else {
 		for _, k := range metrics {
 			metricBestWindow[k] = windows[0]

@@ -135,6 +135,11 @@ func anyBlocksWoAllSites(bestWindow window, uceAln nexus.Alignment, chars []byte
 	return false
 }
 
+// useFullRange checks invariant conditions and returns if any are true
+func useFullRange(bestWindow window, uceAln nexus.Alignment, chars []byte) bool {
+	return anyBlocksWoAllSites(bestWindow, uceAln, chars) || anyUndeterminedBlocks(bestWindow, uceAln, chars)
+}
+
 func csvColToPlotMatrix(best window, n int) []int8 {
 	matrix := make([]int8, n)
 	for i := range matrix {

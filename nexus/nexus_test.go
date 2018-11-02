@@ -123,11 +123,11 @@ func TestNexus(t *testing.T) {
 				for i := uint(0); i < aln.NSeq(); i++ {
 					seq := aln.Seq(i)
 					sum := 0
-					for _, r := range nex.Letters() {
+					for _, r := range append(nex.Letters(), nex.Missing(), nex.Gap()) {
 						sum += strings.Count(seq, string(r))
 					}
 					if sum != len(seq) {
-						t.Errorf("Sequence contains invalid characters.")
+						t.Errorf("Sequence contains invalid characters. Known char count %d, total len %d", sum, len(seq))
 					}
 				}
 			})

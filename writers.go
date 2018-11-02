@@ -50,19 +50,21 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 	}
 
 	file := csv.NewWriter(f)
+	str := make([]string, 8)
 	for m, v := range metricArray {
 		window := bestWindows[m]
 		for i := range alnSites {
-			if err := file.Write([]string{
-				name,                                  // UCE name
-				strconv.Itoa(uceSites[i]),             // UCE site position relative to center of alignment
-				strconv.Itoa(i),                       // UCE site position absolute
-				strconv.Itoa(window.Start()),          // Best window for metric, start
-				strconv.Itoa(window.Stop()),           // Best window for metric, stop
-				m.String(),                            // Metric under analysis
-				strconv.FormatFloat(v[i], 'e', 5, 64), // Metric value at site position
-				strconv.Itoa(relToWindow(window.Start(), i, window.Stop())), // -1 if before window, 0 if in window, 1 if after window
-			}); err != nil {
+			str = []string{
+				name,                                  // 1) UCE name
+				strconv.Itoa(uceSites[i]),             // 2) UCE site position relative to center of alignment
+				strconv.Itoa(i),                       // 3) UCE site position absolute
+				strconv.Itoa(window.Start()),          // 4) Best window for metric, start
+				strconv.Itoa(window.Stop()),           // 5) Best window for metric, stop
+				m.String(),                            // 6) Metric under analysis
+				strconv.FormatFloat(v[i], 'e', 5, 64), // 7) Metric value at site position
+				strconv.Itoa(relToWindow(window.Start(), i, window.Stop())), // 8) -1 if before window, 0 if in window, 1 if after window
+			}
+			if err := file.Write(str); err != nil {
 				ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
 			}
 		}

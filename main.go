@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"path"
@@ -100,14 +99,14 @@ func main() {
 		ui.Errorf("Could not create output file: %s", err)
 	}
 
-	// Write the header to the output file (clears output file if present)
+	// Write the header to the output file
 	writeOutputHeader(out)
 
 	// If PartitionFinder2 config file is desired, write its header/starting block
 	if *cfg {
 		pfinderFile, err = os.Create(pFinderFileName)
 		if err != nil {
-			ui.Errorf("Could not read file: %s", err)
+			ui.Errorf("Could not read PartitionFinder2 file: %s", err)
 		}
 		pfinder.WriteStartBlock(pfinderFile, datasetName)
 	}
@@ -117,7 +116,7 @@ func main() {
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
 	if err := validateMinWin(nex.Alignment().Len(), *minWin); err != nil {
-		log.Fatalln(err)
+		ui.Errorf("Early exit: %v", err)
 	}
 
 	var (
@@ -177,11 +176,12 @@ func main() {
 // processUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
 func processUce(uceAln nexus.Alignment, metrics []string, minWin int, chars []byte) (map[string]window, map[string][]float64) {
-	metricBestWindow := make(map[string]window, len(metrics))
-	metricBestVals := make(map[string][]float64, len(metrics))
-
-	windows := getAllWindows(uceAln, minWin)
-	inVarSites := invariantSites(uceAln, chars)
+	var (
+		metricBestWindow = make(map[string]window, len(metrics))
+		metricBestVals   = make(map[string][]float64, len(metrics))
+		windows          = getAllWindows(uceAln, minWin)
+		inVarSites       = invariantSites(uceAln, chars)
+	)
 
 	for _, m := range metrics {
 		switch m {

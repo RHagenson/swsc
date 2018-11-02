@@ -37,8 +37,6 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 			ui.Errorf(msg)
 		}
 	}
-
-	d := make([][]string, 0)
 	N := len(alnSites)
 	middle := int(float64(N) / 2.0)
 	uceSites := make([]int, N)
@@ -59,8 +57,8 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 	file := csv.NewWriter(f)
 	for m, v := range metricArray {
 		window := bestWindows[m]
-		for i := 0; i < N; i++ {
-			file.Write([]string{
+		for i := range alnSites {
+			if err := file.Write([]string{
 				name,                                  // UCE name
 				strconv.Itoa(uceSites[i]),             // UCE site position relative to center of alignment
 				strconv.Itoa(i),                       // UCE site position absolute
@@ -69,11 +67,9 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 				m.String(),                            // Metric under analysis
 				strconv.FormatFloat(v[i], 'e', 5, 64), // Metric value at site position
 				strconv.Itoa(int(matrixVals[i])),      // Prior to best window (-1), in best window (0), after window (+1)
-			})
+			}); err != nil {
+				ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
+			}
 		}
-	}
-
-	if err := file.WriteAll(d); err != nil {
-		ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
 	}
 }

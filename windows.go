@@ -30,15 +30,16 @@ func getAllWindows(uceAln nexus.Alignment, minWin int) []Window {
 //   1) at least minimum window from the start of the UCE (ie, first start at minimum+1)
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
-// TODO: Preallocate windows array. Tried my hand at this once and hit a mental block.
 func generateWindows(length, min int) ([]Window, error) {
 	if min > length/3 {
 		return nil, errors.New("minimum window size is too large")
 	}
-	windows := make([]Window, 0)
+	n := (length - min*3) + 1            // Make range inclusive
+	windows := make([]Window, n*(n+1)/2) // Length is sum of all numbers up to n
 	for start := min; start <= length-min-min; start++ {
 		for end := start + min; end+min <= length; end++ {
-			windows = append(windows, Window{start, end})
+			// Zero index: start-min + end-start-min -> end-min-min
+			windows[end-min-min] = Window{start, end}
 		}
 	}
 	return windows, nil

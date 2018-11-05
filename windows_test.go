@@ -22,6 +22,7 @@ func TestGenerateWindows(t *testing.T) {
 		{325, 105, 66},
 
 		{5786, 50, 15890703},
+		{5786, 100, 15056328},
 	}
 	for _, tc := range tt {
 		got, _ := generateWindows(tc.length, tc.minWin)

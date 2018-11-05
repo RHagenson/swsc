@@ -46,7 +46,11 @@ func factorial(v int) (float64, error) {
 }
 
 func factorialMatrix(vs map[byte][]int) []float64 {
-	product := make([]float64, len(vs[0])) // vs['A'][i] * vs['T'][i] * vs['G'][i] * vs['C'][i]
+	length := 0
+	for _, v := range vs {
+		length = len(v)
+	}
+	product := make([]float64, length) // vs['A'][i] * vs['T'][i] * vs['G'][i] * vs['C'][i]
 	for i := range product {
 		product[i] = 1.0
 	}
@@ -83,14 +87,14 @@ func maxInFreqMap(freqs map[byte]float64) float64 {
 }
 
 func getMinVarWindow(windows []Window, alnLength int) Window {
-	best := float64(math.MaxInt16)
-	bestWindow := windows[0]
+	best := math.MaxFloat64
+	var bestWindow Window
 
 	for _, w := range windows {
-		l1 := float64(w[0])
-		l2 := float64(w[1] - w[0])
-		l3 := float64(alnLength - w[0])
-		variance := stat.Variance([]float64{l1, l2, l3}, nil)
+		left := float64(w.Start())
+		core := float64(w.Stop() - w.Start())
+		right := float64(alnLength - w.Stop())
+		variance := stat.Variance([]float64{left, core, right}, nil)
 		if variance < best {
 			best = variance
 			bestWindow = w
@@ -102,9 +106,9 @@ func getMinVarWindow(windows []Window, alnLength int) Window {
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters
 // Not the same as anyBlocksWoAllSites()
 func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
-	leftAln := uceAln.Subseq(-1, bestWindow[0])
-	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
-	rightAln := uceAln.Subseq(bestWindow[1], -1)
+	leftAln := uceAln.Subseq(-1, bestWindow.Start())
+	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
+	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
 
 	leftFreq := bpFreqCalc(leftAln, chars)
 	coreFreq := bpFreqCalc(coreAln, chars)
@@ -121,9 +125,9 @@ func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []by
 // anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
 // Not the same as anyUndeterminedBlocks()
 func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
-	leftAln := uceAln.Subseq(-1, bestWindow[0])
-	coreAln := uceAln.Subseq(bestWindow[0], bestWindow[1])
-	rightAln := uceAln.Subseq(bestWindow[1], -1)
+	leftAln := uceAln.Subseq(-1, bestWindow.Start())
+	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
+	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
 
 	leftCounts := countBases(leftAln, chars)
 	coreCounts := countBases(coreAln, chars)
@@ -142,9 +146,6 @@ func useFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool 
 
 func bpFreqCalc(aln []string, bases []byte) map[byte]float64 {
 	freqs := make(map[byte]float64)
-	for _, b := range bases {
-		freqs[b] = 0.0
-	}
 	baseCounts := countBases(aln, bases)
 	sumCounts := 0.0
 	for _, count := range baseCounts {
@@ -161,9 +162,6 @@ func bpFreqCalc(aln []string, bases []byte) map[byte]float64 {
 
 func countBases(aln nexus.Alignment, bases []byte) map[byte]int {
 	counts := make(map[byte]int)
-	for _, b := range bases {
-		counts[b] = 0
-	}
 	allSeqs := aln.String()
 	for _, char := range allSeqs {
 		counts[byte(char)]++

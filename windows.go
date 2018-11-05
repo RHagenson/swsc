@@ -37,10 +37,11 @@ func generateWindows(length, min int) ([]Window, error) {
 	}
 	n := (length - min*3) + 1            // Make range inclusive
 	windows := make([]Window, n*(n+1)/2) // Length is sum of all numbers n and below
-	for start := min; start <= length-min-min; start++ {
+	i := 0
+	for start := min; start+min+min <= length; start++ {
 		for end := start + min; end+min <= length; end++ {
-			// Zero index: start-min + end-start-min -> end-min-min
-			windows[end-min-min] = Window{start, end + 1}
+			windows[i] = Window{start, end + 1}
+			i++
 		}
 	}
 	return windows, nil

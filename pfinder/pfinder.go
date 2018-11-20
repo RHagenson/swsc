@@ -2,13 +2,13 @@ package pfinder
 
 import (
 	"fmt"
-	"os"
+	"io"
 
 	"bitbucket.org/rhagenson/swsc/ui"
 )
 
 // WriteStartBlock writes PartitionFinder2 configuration header/start block
-func WriteStartBlock(f *os.File, datasetName string) {
+func WriteStartBlock(f io.Writer, datasetName string) {
 	branchLengths := "linked"
 	models := "GTR+G"
 	modelSelection := "aicc"
@@ -23,14 +23,14 @@ func WriteStartBlock(f *os.File, datasetName string) {
 		fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +
 		"## DATA BLOCKS: see manual for how to define ##\n" +
 		"[data_blocks]\n"
-	if _, err := f.WriteString(block); err != nil {
+	if _, err := io.WriteString(f, block); err != nil {
 		ui.Errorf("Could not write PartionFinder2 file: %s", err)
 	}
 }
 
 // WriteConfigBlock appends the proper window size for the UCE
 // If their are either undetermined or blocks w/o all sites the fullRange should be used
-func WriteConfigBlock(f *os.File, name string, bestWindow [2]int, start, stop int, fullRange bool) {
+func WriteConfigBlock(f io.Writer, name string, bestWindow [2]int, start, stop int, fullRange bool) {
 	block := ""
 	if fullRange || bestWindow[1]-bestWindow[0] == stop-start {
 		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start+1, stop)
@@ -49,19 +49,19 @@ func WriteConfigBlock(f *os.File, name string, bestWindow [2]int, start, stop in
 			fmt.Sprintf("%s_right = %d-%d;\n", name, rightStart, rightEnd)
 	}
 
-	if _, err := f.WriteString(block); err != nil {
+	if _, err := io.WriteString(f, block); err != nil {
 		ui.Errorf("Failed to write .cfg config block: %s", err)
 	}
 }
 
 // WriteEndBlock appends the end block to the specified .cfg file
-func WriteEndBlock(f *os.File) {
+func WriteEndBlock(f io.Writer) {
 	search := "rclusterf"
 	block := "\n" +
 		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +
 		"[schemes]\n" +
 		fmt.Sprintf("search = %s;\n\n", search)
-	if _, err := f.WriteString(block); err != nil {
+	if _, err := io.WriteString(f, block); err != nil {
 		ui.Errorf("Failed to write .cfg end block: %s", err)
 	}
 }

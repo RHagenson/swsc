@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"bitbucket.org/rhagenson/swsc/nexus"
@@ -125,8 +126,29 @@ func main() {
 		bar  = pb.StartNew(len(uces)) // Progress bar
 	)
 
-	// Process each UCE in turn
+	// Order UCEs
+	// Create reverse lookup to maintain order
+	revUCEs := make(map[int]string)
+	keys := make([]int, 0)
 	for name, sites := range uces {
+		var (
+			start = math.MaxInt16 // Minimum position in UCE
+		)
+		// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
+		for _, pair := range sites {
+			if pair.First() < start {
+				start = pair.First()
+			}
+		}
+		revUCEs[start] = name
+		keys = append(keys, start)
+	}
+	sort.Ints(keys)
+
+	// Process each UCE in turn
+	for _, key := range keys {
+		name := revUCEs[key]
+		sites := uces[name]
 		var (
 			start = math.MaxInt16 // Minimum position in UCE
 			stop  = math.MinInt16 // Maximum position in UCE

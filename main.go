@@ -59,17 +59,17 @@ func setup() {
 	switch {
 	case *read == "" && *write == "":
 		pflag.Usage()
-		ui.Errorf("Must provide input and output names")
+		ui.Errorf("Must provide input and output names\n")
 	case !strings.HasSuffix(*read, ".nex"):
-		ui.Errorf("Input expected to end in .nex, got %s", path.Ext(*read))
+		ui.Errorf("Input expected to end in .nex, got %s\n", path.Ext(*read))
 	case !strings.HasSuffix(*write, ".csv"):
-		ui.Errorf("Output expected to end in .csv, got %s", path.Ext(*write))
+		ui.Errorf("Output expected to end in .csv, got %s\n", path.Ext(*write))
 	case !strings.HasSuffix(*cfg, ".cfg"):
-		ui.Errorf("Config file expected to end in .cfg, got %s", path.Ext(*cfg))
+		ui.Errorf("Config file expected to end in .cfg, got %s\n", path.Ext(*cfg))
 	case *minWin < 0:
-		ui.Errorf("Window size must be positive, got %d", *minWin)
+		ui.Errorf("Window size must be positive, got %d\n", *minWin)
 	case !(*entropy || *gc):
-		ui.Errorf("At least one metric is required")
+		ui.Errorf("At least one metric is required\n")
 	default:
 	}
 

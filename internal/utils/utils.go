@@ -63,6 +63,7 @@ func factorialMatrix(vs map[byte][]int) ([]float64, error) {
 	return product, nil
 }
 
+// MinInCountsMap returns the minimum value in the map
 func MinInCountsMap(counts map[byte]int) int {
 	min := math.MaxInt16
 	for _, val := range counts {
@@ -73,6 +74,7 @@ func MinInCountsMap(counts map[byte]int) int {
 	return min
 }
 
+// MaxInFreqMap returns the maximum value in the map
 func MaxInFreqMap(freqs map[byte]float64) float64 {
 	max := math.SmallestNonzeroFloat64
 	for _, val := range freqs {

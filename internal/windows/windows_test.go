@@ -3,6 +3,7 @@ package windows_test
 import (
 	"testing"
 
+	"bitbucket.org/rhagenson/swsc/internal/metric"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
@@ -40,7 +41,7 @@ func TestGenerateWindows(t *testing.T) {
 
 func TestWindow(t *testing.T) {
 	tt := []struct {
-		win *windows.Window
+		win windows.Window
 	}{
 		{windows.New(0, 0)},    // Start == Stop
 		{windows.New(0, 50)},   // 0 <= Start < Stop
@@ -132,6 +133,51 @@ func TestGetAll(t *testing.T) {
 		for i := range got {
 			if got[i] != exp[i] {
 				t.Errorf("Got %v, Expected %v", got[i], exp[i])
+			}
+		}
+	}
+}
+
+func TestGetBest(t *testing.T) {
+	tt := []struct {
+		metrics    map[metric.Metric][]float64
+		windows    []windows.Window
+		alnLen     int
+		inVarSites []bool
+		exp        map[metric.Metric]windows.Window
+	}{
+		{
+			map[metric.Metric][]float64{
+				metric.Entropy: []float64{
+					1.694,
+					1.438,
+					1.610,
+					0,
+					1.608,
+					0,
+				},
+			},
+			[]windows.Window{
+				windows.New(2, 4),
+				windows.New(2, 5),
+				windows.New(2, 6),
+				windows.New(3, 5),
+				windows.New(4, 6),
+				windows.New(3, 6),
+			},
+			8,
+			[]bool{false, false, false, false, false, false},
+			map[metric.Metric]windows.Window{
+				metric.Entropy: windows.New(2, 5),
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		got := windows.GetBest(tc.metrics, tc.windows, tc.alnLen, tc.inVarSites)
+		for m, v := range tc.exp {
+			if got[m] != v {
+				t.Errorf("Got: %v, Expected: %v", got[m], v)
 			}
 		}
 	}

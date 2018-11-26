@@ -23,14 +23,14 @@ import (
 
 // Required flags
 var (
-	read  = pflag.String("input", "", "Nexus (.nex) file to process")
-	write = pflag.String("output", "", "Partition file to write")
+	read  = pflag.String("input", "", "Nexus file to process (.nex)")
+	write = pflag.String("output", "", "Partition file to write (.csv)")
+	cfg   = pflag.String("cfg", "", "Config file for PartionFinder2 (.cfg)")
 )
 
 // General use flags
 var (
 	minWin = pflag.Int("minWin", 50, "Minimum window size")
-	cfg    = pflag.Bool("cfg", false, "Write config file for PartionFinder2 (same dir as --output)")
 	help   = pflag.Bool("help", false, "Print help and exit")
 )
 
@@ -43,10 +43,9 @@ var (
 
 // Global reference vars
 var (
-	pFinderFileName = ""
-	pfinderFile     = new(os.File)
-	datasetName     = ""
-	metrics         = make([]metric.Metric, 0)
+	pfinderFile = new(os.File)
+	datasetName = ""
+	metrics     = make([]metric.Metric, 0)
 )
 
 func setup() {
@@ -65,6 +64,8 @@ func setup() {
 		ui.Errorf("Input expected to end in .nex, got %s", path.Ext(*read))
 	case !strings.HasSuffix(*write, ".csv"):
 		ui.Errorf("Output expected to end in .csv, got %s", path.Ext(*write))
+	case !strings.HasSuffix(*cfg, ".cfg"):
+		ui.Errorf("Config file expected to end in .cfg, got %s", path.Ext(*cfg))
 	case *minWin < 0:
 		ui.Errorf("Window size must be positive, got %d", *minWin)
 	case !(*entropy || *gc):
@@ -74,9 +75,6 @@ func setup() {
 
 	// Set global vars
 	datasetName = strings.TrimRight(path.Base(*read), ".nex")
-	if *cfg {
-		pFinderFileName = path.Join(path.Dir(*write), datasetName) + ".cfg"
-	}
 	if *entropy {
 		metrics = append(metrics, metric.Entropy)
 	}
@@ -109,8 +107,8 @@ func main() {
 	writers.WriteOutputHeader(out)
 
 	// If PartitionFinder2 config file is desired, write its header/starting block
-	if *cfg {
-		pfinderFile, err = os.Create(pFinderFileName)
+	if *cfg != "" {
+		pfinderFile, err = os.Create(*cfg)
 		if err != nil {
 			ui.Errorf("Could not read PartitionFinder2 file: %s", err)
 		}
@@ -175,7 +173,7 @@ func main() {
 		uceAln := aln.Subseq(start, stop)
 		bestWindows, metricArray := uce.ProcessUce(uceAln, metrics, *minWin, nex.Letters())
 
-		if *cfg {
+		if *cfg != "" {
 			for _, bestWindow := range bestWindows {
 				block := pfinder.ConfigBlock(
 					name, bestWindow, start, stop,
@@ -195,7 +193,7 @@ func main() {
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")
-	if *cfg {
+	if *cfg != "" {
 		block := pfinder.EndBlock()
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write .cfg end block: %s", err)
@@ -206,7 +204,7 @@ func main() {
 	fmt.Println(ui.Footer(*write))
 
 	// Close the config file if it was opened
-	if *cfg {
+	if *cfg != "" {
 		pfinderFile.Close()
 	}
 }

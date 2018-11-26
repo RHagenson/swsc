@@ -201,9 +201,10 @@ func processUce(uceAln nexus.Alignment, metrics []Metric, minWin int, chars []by
 	var (
 		metricBestWindow = make(map[Metric]Window, len(metrics))
 		metricBestVals   = make(map[Metric][]float64, len(metrics))
-		windows          = getAllWindows(uceAln, minWin)
-		inVarSites       = invariantSites(uceAln, chars)
 	)
+
+	windows := getAllWindows(uceAln, minWin)
+	inVarSites := invariantSites(uceAln, chars)
 
 	for _, m := range metrics {
 		switch m {

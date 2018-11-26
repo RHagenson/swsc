@@ -118,9 +118,9 @@ func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []by
 	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
 	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
 
-	leftFreq := utils.BpFreqCalc(leftAln, chars)
-	coreFreq := utils.BpFreqCalc(coreAln, chars)
-	rightFreq := utils.BpFreqCalc(rightAln, chars)
+	leftFreq := leftAln.BasesFrequency(chars)
+	coreFreq := coreAln.BasesFrequency(chars)
+	rightFreq := rightAln.BasesFrequency(chars)
 
 	// If any frequency is NaN
 	// TODO: Likely better with bpFreqCalc returning an error value
@@ -137,9 +137,9 @@ func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte
 	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
 	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
 
-	leftCounts := leftAln.CountBases(chars)
-	coreCounts := coreAln.CountBases(chars)
-	rightCounts := rightAln.CountBases(chars)
+	leftCounts := leftAln.BasesCount(chars)
+	coreCounts := coreAln.BasesCount(chars)
+	rightCounts := rightAln.BasesCount(chars)
 
 	if utils.MinInCountsMap(leftCounts) == 0 || utils.MinInCountsMap(coreCounts) == 0 || utils.MinInCountsMap(rightCounts) == 0 {
 		return true

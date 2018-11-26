@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/ui"
 	"github.com/pkg/errors"
 )
@@ -83,20 +82,4 @@ func MaxInFreqMap(freqs map[byte]float64) float64 {
 		}
 	}
 	return max
-}
-
-func BpFreqCalc(aln nexus.Alignment, bases []byte) map[byte]float64 {
-	freqs := make(map[byte]float64)
-	baseCounts := aln.CountBases(bases)
-	sumCounts := 0.0
-	for _, count := range baseCounts {
-		sumCounts += float64(count)
-	}
-	if sumCounts == 0 {
-		sumCounts = 1.0
-	}
-	for char, count := range baseCounts {
-		freqs[char] = float64(count) / sumCounts
-	}
-	return freqs
 }

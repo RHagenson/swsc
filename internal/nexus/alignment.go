@@ -1,6 +1,8 @@
 package nexus
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Alignment is a collection of equal length sequences
 // Appends missing characters (see Nexus.Missing()) to shorter sequences
@@ -70,11 +72,27 @@ func (aln Alignment) Len() (length int) {
 	return
 }
 
-func (aln Alignment) CountBases(bases []byte) map[byte]int {
+func (aln Alignment) BasesCount(bases []byte) map[byte]int {
 	counts := make(map[byte]int)
 	allSeqs := aln.String()
 	for _, char := range allSeqs {
 		counts[byte(char)]++
 	}
 	return counts
+}
+
+func (aln Alignment) BasesFrequency(bases []byte) map[byte]float64 {
+	freqs := make(map[byte]float64)
+	baseCounts := aln.BasesCount(bases)
+	sumCounts := 0.0
+	for _, count := range baseCounts {
+		sumCounts += float64(count)
+	}
+	if sumCounts == 0 {
+		sumCounts = 1.0
+	}
+	for char, count := range baseCounts {
+		freqs[char] = float64(count) / sumCounts
+	}
+	return freqs
 }

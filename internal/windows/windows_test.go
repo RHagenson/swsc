@@ -3,6 +3,7 @@ package windows_test
 import (
 	"testing"
 
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
 
@@ -61,5 +62,77 @@ func TestWindow(t *testing.T) {
 				t.Errorf("Got: %d, Expected %d", tc.win.Start(), tc.win[0])
 			}
 		})
+	}
+}
+
+func TestGetAll(t *testing.T) {
+	tt := []struct {
+		aln    nexus.Alignment
+		minWin int
+	}{
+		{ // All the same seq
+			nexus.Alignment([]string{
+				"ATGCAT",
+				"ATGCAT",
+				"ATGCAT",
+			}),
+			2,
+		},
+		{ // One seq reversed
+			nexus.Alignment([]string{
+				"ATGCAT",
+				"ATGCAT",
+				"TACGTA",
+			}),
+			2,
+		},
+		{ // No positional matches
+			nexus.Alignment([]string{
+				"ATGCAT",
+				"TGCTGA",
+				"GCTACC",
+			}),
+			2,
+		},
+		{ // Not all bases present
+			nexus.Alignment([]string{
+				"CCCCCC",
+				"TTTTTT",
+				"GGGGGG",
+			}),
+			2,
+		},
+		{ // All the same base
+			nexus.Alignment([]string{
+				"CCCCCC",
+				"CCCCCC",
+				"CCCCCC",
+			}),
+			2,
+		},
+		{ // More than one possible window
+			nexus.Alignment([]string{
+				"CCCCCCCC",
+				"CCCCCCCC",
+				"CCCCCCCC",
+			}),
+			2,
+		},
+	}
+
+	for _, tc := range tt {
+		got := windows.GetAll(tc.aln, tc.minWin)
+		exp, _ := windows.GenerateWindows(tc.aln.Len(), 2)
+		t.Run("Length", func(t *testing.T) {
+			if len(got) != len(exp) {
+				t.Errorf("Got %d, Expected %d", len(got), len(exp))
+			}
+		})
+
+		for i := range got {
+			if got[i] != exp[i] {
+				t.Errorf("Got %v, Expected %v", got[i], exp[i])
+			}
+		}
 	}
 }

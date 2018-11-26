@@ -62,9 +62,9 @@ func getBestWindows(metrics map[Metric][]float64, windows []Window, alnLen int, 
 		for m := range temp {
 			if _, ok := sses[m][win]; !ok {
 				sses[m] = make(map[Window]float64, 0)
-				sses[m][win] = sse(temp[m])
+				sses[m][win] = temp[m]
 			} else {
-				sses[m][win] = sse(temp[m])
+				sses[m][win] = temp[m]
 			}
 		}
 	}

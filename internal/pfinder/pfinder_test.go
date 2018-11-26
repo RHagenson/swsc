@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/rhagenson/swsc/internal/pfinder"
 )
 
-func TestWriteStartBlock(t *testing.T) {
+func TestStartBlock(t *testing.T) {
 	branchLengths := "linked"
 	models := "GTR+G"
 	modelSelection := "aicc"
@@ -21,9 +21,8 @@ func TestWriteStartBlock(t *testing.T) {
 		{"Ω≈ç√∫˜µ≤≥÷"},
 	}
 	for _, tc := range tt {
-		w := new(strings.Builder)
-		pfinder.WriteStartBlock(w, tc.datasetName)
-		block := "## ALIGNMENT FILE ##\n" +
+		got := pfinder.StartBlock(tc.datasetName)
+		exp := "## ALIGNMENT FILE ##\n" +
 			fmt.Sprintf("alignment = %s.nex;\n\n", tc.datasetName) +
 			"## BRANCHLENGTHS: linked | unlinked ##\n" +
 			fmt.Sprintf("branchlengths = %s;\n\n", branchLengths) +
@@ -33,10 +32,10 @@ func TestWriteStartBlock(t *testing.T) {
 			fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +
 			"## DATA BLOCKS: see manual for how to define ##\n" +
 			"[data_blocks]\n"
-		if w.String() != block {
+		if got != exp {
 			diff := make([]string, 0)
-			gotLines := strings.Split(w.String(), "\n")
-			expLines := strings.Split(block, "\n")
+			gotLines := strings.Split(got, "\n")
+			expLines := strings.Split(exp, "\n")
 			for i := range gotLines {
 				if gotLines[i] != expLines[i] {
 					diff = append(diff, fmt.Sprintf("Got:\n%s\nExpected:\n%s\n", gotLines[i], expLines[i]))
@@ -47,7 +46,7 @@ func TestWriteStartBlock(t *testing.T) {
 	}
 }
 
-func TestWriteConfigBlock(t *testing.T) {
+func TestConfigBlock(t *testing.T) {
 	tt := []struct {
 		name        string
 		bestWindow  [2]int
@@ -58,10 +57,9 @@ func TestWriteConfigBlock(t *testing.T) {
 		{"UCE01-full", [2]int{10, 60}, 5, 100, true},
 	}
 	for _, tc := range tt {
-		w := new(strings.Builder)
-		pfinder.WriteConfigBlock(w, tc.name, tc.bestWindow, tc.start, tc.stop, tc.fullRange)
+		got := pfinder.ConfigBlock(tc.name, tc.bestWindow, tc.start, tc.stop, tc.fullRange)
 		t.Run("Correct number of lines", func(t *testing.T) {
-			nLines := len(strings.Split(strings.TrimSpace(w.String()), "\n"))
+			nLines := len(strings.Split(strings.TrimSpace(got), "\n"))
 			if tc.fullRange || tc.bestWindow[1]-tc.bestWindow[0] == tc.stop-tc.start {
 				if nLines != 1 {
 					t.Errorf("Expected 1 output line (full range), got %d", nLines)
@@ -75,18 +73,17 @@ func TestWriteConfigBlock(t *testing.T) {
 	}
 }
 
-func TestWriteEndBlock(t *testing.T) {
-	w := new(strings.Builder)
-	pfinder.WriteEndBlock(w)
+func TestEndBlock(t *testing.T) {
+	got := pfinder.EndBlock()
 	search := "rclusterf"
-	block := "\n" +
+	exp := "\n" +
 		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +
 		"[schemes]\n" +
 		fmt.Sprintf("search = %s;\n\n", search)
-	if w.String() != block {
+	if got != exp {
 		diff := make([]string, 0)
-		gotLines := strings.Split(w.String(), "\n")
-		expLines := strings.Split(block, "\n")
+		gotLines := strings.Split(got, "\n")
+		expLines := strings.Split(exp, "\n")
 		for i := range gotLines {
 			if gotLines[i] != expLines[i] {
 				diff = append(diff, fmt.Sprintf("Got:\n%s\nExpected:\n%s\n", gotLines[i], expLines[i]))

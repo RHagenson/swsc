@@ -2,13 +2,10 @@ package pfinder
 
 import (
 	"fmt"
-	"io"
-
-	"bitbucket.org/rhagenson/swsc/internal/ui"
 )
 
-// WriteStartBlock writes PartitionFinder2 configuration header/start block
-func WriteStartBlock(f io.Writer, datasetName string) {
+// StartBlock writes PartitionFinder2 configuration header/start block
+func StartBlock(datasetName string) string {
 	branchLengths := "linked"
 	models := "GTR+G"
 	modelSelection := "aicc"
@@ -23,14 +20,12 @@ func WriteStartBlock(f io.Writer, datasetName string) {
 		fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +
 		"## DATA BLOCKS: see manual for how to define ##\n" +
 		"[data_blocks]\n"
-	if _, err := io.WriteString(f, block); err != nil {
-		ui.Errorf("Could not write PartionFinder2 file: %s", err)
-	}
+	return block
 }
 
-// WriteConfigBlock appends the proper window size for the UCE
+// ConfigBlock appends the proper window size for the UCE
 // If their are either undetermined or blocks w/o all sites the fullRange should be used
-func WriteConfigBlock(f io.Writer, name string, bestWindow [2]int, start, stop int, fullRange bool) {
+func ConfigBlock(name string, bestWindow [2]int, start, stop int, fullRange bool) string {
 	block := ""
 	if fullRange || bestWindow[1]-bestWindow[0] == stop-start {
 		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start, stop)
@@ -49,19 +44,15 @@ func WriteConfigBlock(f io.Writer, name string, bestWindow [2]int, start, stop i
 			fmt.Sprintf("%s_right = %d-%d;\n", name, rightStart, rightEnd)
 	}
 
-	if _, err := io.WriteString(f, block); err != nil {
-		ui.Errorf("Failed to write .cfg config block: %s", err)
-	}
+	return block
 }
 
-// WriteEndBlock appends the end block to the specified .cfg file
-func WriteEndBlock(f io.Writer) {
+// EndBlock appends the end block to the specified .cfg file
+func EndBlock() string {
 	search := "rclusterf"
 	block := "\n" +
 		"## SCHEMES, search: all | user | greedy | rcluster | hcluster | kmeans ##\n" +
 		"[schemes]\n" +
 		fmt.Sprintf("search = %s;\n\n", search)
-	if _, err := io.WriteString(f, block); err != nil {
-		ui.Errorf("Failed to write .cfg end block: %s", err)
-	}
+	return block
 }

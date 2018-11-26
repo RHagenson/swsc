@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path"
@@ -113,7 +114,11 @@ func main() {
 		if err != nil {
 			ui.Errorf("Could not read PartitionFinder2 file: %s", err)
 		}
-		pfinder.WriteStartBlock(pfinderFile, datasetName)
+		block := pfinder.StartBlock(datasetName)
+		if _, err := io.WriteString(pfinderFile, block); err != nil {
+			ui.Errorf("Failed to write .cfg start block: %s", err)
+		}
+
 	}
 
 	// Read in the input Nexus file
@@ -147,7 +152,7 @@ func main() {
 		revUCEs[start] = name
 		keys = append(keys, start)
 	}
-	sort.Ints(keys)
+	sort.Ints(keys) // Sort done in place
 
 	// Process each UCE in turn
 	for _, key := range keys {
@@ -172,10 +177,14 @@ func main() {
 
 		if *cfg {
 			for _, bestWindow := range bestWindows {
-				pfinder.WriteConfigBlock(
-					pfinderFile, name, bestWindow, start, stop,
+				block := pfinder.ConfigBlock(
+					name, bestWindow, start, stop,
 					windows.UseFullRange(bestWindow, aln, nex.Letters()),
 				)
+				if _, err := io.WriteString(pfinderFile, block); err != nil {
+					ui.Errorf("Failed to write .cfg config block: %s", err)
+				}
+
 			}
 		}
 		alnSites := make([]int, stop-start)
@@ -187,7 +196,10 @@ func main() {
 	}
 	bar.FinishPrint("Finished processing UCEs")
 	if *cfg {
-		pfinder.WriteEndBlock(pfinderFile)
+		block := pfinder.EndBlock()
+		if _, err := io.WriteString(pfinderFile, block); err != nil {
+			ui.Errorf("Failed to write .cfg end block: %s", err)
+		}
 	}
 
 	// Inform user of where output was written

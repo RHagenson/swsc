@@ -10,7 +10,7 @@ import (
 
 // ValidateMinWin checks if minWin has been set too large to create proper flanks and core
 func ValidateMinWin(length, minWin int) error {
-	if length/3 <= minWin {
+	if length/3 < minWin {
 		msg := fmt.Sprintf(
 			"minWin is too large, maximum allowed value is length/3 or %d\n",
 			length/3,

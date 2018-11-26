@@ -69,7 +69,6 @@ func setup() {
 	case !(*entropy || *gc):
 		ui.Errorf("At least one metric is required")
 	default:
-		fmt.Printf("Arguments are reasonable")
 	}
 
 	// Set global vars

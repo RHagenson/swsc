@@ -85,7 +85,7 @@ func main() {
 	setup()
 
 	// Inform user on STDOUT what is being done
-	ui.Header(*read)
+	fmt.Println(ui.Header(*read))
 
 	// Open input file
 	in, err := os.Open(*read)
@@ -187,7 +187,7 @@ func main() {
 	}
 
 	// Inform user of where output was written
-	ui.Footer(*write)
+	fmt.Println(ui.Footer(*write))
 
 	// Close the config file if it was opened
 	if *cfg {

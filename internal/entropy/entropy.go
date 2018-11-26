@@ -1,6 +1,8 @@
 package entropy
 
 import (
+	"math"
+
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"gonum.org/v1/gonum/stat"
 )
@@ -19,6 +21,8 @@ func entropyCalc(bpFreqs map[byte]float64) float64 {
 		// Ln(0) == -Inf, Shannon's entropy uses Ln()
 		if val != 0 {
 			freqs = append(freqs, float64(val))
+		} else {
+			freqs = append(freqs, math.SmallestNonzeroFloat64)
 		}
 	}
 	return stat.Entropy(freqs)

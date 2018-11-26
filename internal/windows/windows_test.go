@@ -36,3 +36,30 @@ func TestGenerateWindows(t *testing.T) {
 		}
 	}
 }
+
+func TestWindow(t *testing.T) {
+	tt := []struct {
+		win *windows.Window
+	}{
+		{windows.New(0, 0)},    // Start == Stop
+		{windows.New(0, 50)},   // 0 <= Start < Stop
+		{windows.New(50, 0)},   //  0 <= Stop < Start, does not orient values
+		{windows.New(-50, 0)},  // Start < Stop <= 0
+		{windows.New(0, -50)},  // Stop < Start <= 0, does not orient values
+		{windows.New(-50, 50)}, // Start < 0 < Stop
+		{windows.New(50, -50)}, // Stop < 0 < Start, does not orient values
+	}
+
+	for _, tc := range tt {
+		t.Run("Start", func(t *testing.T) {
+			if tc.win.Start() != tc.win[0] {
+				t.Errorf("Got: %d, Expected %d", tc.win.Start(), tc.win[0])
+			}
+		})
+		t.Run("Stop", func(t *testing.T) {
+			if tc.win.Stop() != tc.win[1] {
+				t.Errorf("Got: %d, Expected %d", tc.win.Start(), tc.win[0])
+			}
+		})
+	}
+}

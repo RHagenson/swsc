@@ -1,7 +1,6 @@
 package windows
 
 import (
-	"errors"
 	"math"
 
 	"bitbucket.org/rhagenson/swsc/internal/metric"
@@ -12,6 +11,10 @@ import (
 
 // Window is an inclusive window into a UCE
 type Window [2]int
+
+func New(start, stop int) *Window {
+	return &Window{start, stop}
+}
 
 // Start is the starting position of a window
 func (w *Window) Start() int {
@@ -79,8 +82,8 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
 func GenerateWindows(length, min int) ([]Window, error) {
-	if min > length/3 {
-		return nil, errors.New("minimum window size is too large")
+	if err := utils.ValidateMinWin(length, min); err != nil {
+		return nil, err
 	}
 	n := (length - min*3) + 1            // Make range inclusive
 	windows := make([]Window, n*(n+1)/2) // Length is sum of all numbers n and below

@@ -33,10 +33,10 @@ func WriteStartBlock(f io.Writer, datasetName string) {
 func WriteConfigBlock(f io.Writer, name string, bestWindow [2]int, start, stop int, fullRange bool) {
 	block := ""
 	if fullRange || bestWindow[1]-bestWindow[0] == stop-start {
-		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start+1, stop)
+		block = fmt.Sprintf("%s_all = %d-%d;\n", name, start, stop)
 	} else {
 		// left UCE
-		leftStart := start + 1
+		leftStart := start
 		leftEnd := start + bestWindow[0]
 		// core UCE
 		coreStart := leftEnd + 1

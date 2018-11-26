@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	"bitbucket.org/rhagenson/swsc/internal/ui"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +42,7 @@ func factorial(v int) (float64, error) {
 	return val, errors.Errorf("factorial of %d was %s the true value", v, acc)
 }
 
-func factorialMatrix(vs map[byte][]int) []float64 {
+func factorialMatrix(vs map[byte][]int) ([]float64, error) {
 	length := 0
 	for _, v := range vs {
 		length = len(v)
@@ -57,11 +56,11 @@ func factorialMatrix(vs map[byte][]int) []float64 {
 			val, err := factorial(vs[nuc][i])
 			product[i] *= val
 			if err != nil {
-				ui.Errorf("%v", err)
+				return nil, fmt.Errorf("%v", err)
 			}
 		}
 	}
-	return product
+	return product, nil
 }
 
 func MinInCountsMap(counts map[byte]int) int {

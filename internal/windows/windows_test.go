@@ -43,11 +43,11 @@ func TestWindow(t *testing.T) {
 	}{
 		{windows.New(0, 0)},    // Start == Stop
 		{windows.New(0, 50)},   // 0 <= Start < Stop
-		{windows.New(50, 0)},   //  0 <= Stop < Start, does not orient values
+		{windows.New(50, 0)},   //  0 <= Stop < Start, orients values such as Start < Stop
 		{windows.New(-50, 0)},  // Start < Stop <= 0
-		{windows.New(0, -50)},  // Stop < Start <= 0, does not orient values
+		{windows.New(0, -50)},  // Stop < Start <= 0, orients values such as Start < Stop
 		{windows.New(-50, 50)}, // Start < 0 < Stop
-		{windows.New(50, -50)}, // Stop < 0 < Start, does not orient values
+		{windows.New(50, -50)}, // Stop < 0 < Start, orients values such as Start < Stop
 	}
 
 	for _, tc := range tt {

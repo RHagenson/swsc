@@ -3,14 +3,14 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 
 	"bitbucket.org/rhagenson/swsc/ui"
 )
 
 // writeOutputHeader truncates the *write file to only the header row
-func writeOutputHeader(f *os.File) {
+func writeOutputHeader(f io.Writer) {
 	header := []string{
 		"name",
 		"uce_site", "aln_site",
@@ -21,13 +21,13 @@ func writeOutputHeader(f *os.File) {
 	file := csv.NewWriter(f)
 	if err := file.Write(header); err != nil {
 		file.Flush()
-		ui.Errorf("Problem writing %s, encountered %s.", f.Name(), err)
+		ui.Errorf("Problem writing output header: %s.", err)
 	}
 	return
 }
 
 // writeOutput appends partitioning data to output
-func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
+func writeOutput(f io.Writer, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {
@@ -64,7 +64,7 @@ func writeOutput(f *os.File, bestWindows map[Metric]Window, metricArray map[Metr
 		mNum++
 	}
 	if err := file.WriteAll(d); err != nil {
-		ui.Errorf("Encountered %s in writing to file %s", err, f.Name())
+		ui.Errorf("Problem writing to output: %s", err)
 	}
 }
 

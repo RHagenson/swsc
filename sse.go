@@ -32,12 +32,10 @@ func getSse(metric []float64, win Window, siteVar []bool) float64 {
 }
 
 // getSses generalized getSse over each site window.
-// metrics is [metric name][value index] arranged
-func getSses(metrics map[Metric][]float64, win Window, siteVar []bool) map[Metric][]float64 {
-	// TODO: Preallocate array
-	sses := make(map[Metric][]float64, len(metrics))
+func getSses(metrics map[Metric][]float64, win Window, siteVar []bool) map[Metric]float64 {
+	sses := make(map[Metric]float64, len(metrics))
 	for m := range metrics {
-		sses[m] = append(sses[m], getSse(metrics[m], win, siteVar))
+		sses[m] = getSse(metrics[m], win, siteVar)
 	}
 	return sses
 }

@@ -13,6 +13,9 @@ import (
 type Window [2]int
 
 func New(start, stop int) *Window {
+	if stop < start {
+		return &Window{stop, start}
+	}
 	return &Window{start, stop}
 }
 

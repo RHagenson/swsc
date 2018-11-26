@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"encoding/csv"
@@ -6,11 +6,11 @@ import (
 	"io"
 	"strconv"
 
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 )
 
-// writeOutputHeader truncates the *write file to only the header row
-func writeOutputHeader(f io.Writer) {
+// WriteOutputHeader truncates the *write file to only the header row
+func WriteOutputHeader(f io.Writer) {
 	header := []string{
 		"name",
 		"uce_site", "aln_site",
@@ -26,8 +26,8 @@ func writeOutputHeader(f io.Writer) {
 	return
 }
 
-// writeOutput appends partitioning data to output
-func writeOutput(f io.Writer, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
+// WriteOutput appends partitioning data to output
+func WriteOutput(f io.Writer, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {

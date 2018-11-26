@@ -1,6 +1,6 @@
-package main
+package internal
 
-import "bitbucket.org/rhagenson/swsc/nexus"
+import "bitbucket.org/rhagenson/swsc/internal/nexus"
 
 // Metric is an enum type denoting possible sitewise metrics to calculate
 type Metric int

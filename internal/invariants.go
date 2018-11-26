@@ -1,6 +1,6 @@
-package main
+package internal
 
-import "bitbucket.org/rhagenson/swsc/nexus"
+import "bitbucket.org/rhagenson/swsc/internal/nexus"
 
 // invariantSites streams across an alignment and calls sites invariant by their entropy
 func invariantSites(aln nexus.Alignment, chars []byte) []bool {

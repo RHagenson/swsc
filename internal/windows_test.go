@@ -1,6 +1,10 @@
-package main
+package internal_test
 
-import "testing"
+import (
+	"testing"
+
+	"bitbucket.org/rhagenson/swsc/internal"
+)
 
 func TestGenerateWindows(t *testing.T) {
 	tt := []struct {
@@ -25,7 +29,7 @@ func TestGenerateWindows(t *testing.T) {
 		{5786, 100, 15056328},
 	}
 	for _, tc := range tt {
-		got, _ := generateWindows(tc.length, tc.minWin)
+		got, _ := internal.GenerateWindows(tc.length, tc.minWin)
 		if len(got) != tc.expected {
 			t.Errorf("Given len:%d, win:%d, expected %d, got %d\n",
 				tc.length, tc.minWin, tc.expected, len(got))

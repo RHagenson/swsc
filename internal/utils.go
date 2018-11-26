@@ -1,18 +1,18 @@
-package main
+package internal
 
 import (
 	"fmt"
 	"math"
 	"math/big"
 
-	"bitbucket.org/rhagenson/swsc/nexus"
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/stat"
 )
 
-// validateMinWin checks if minWin has been set too large to create proper flanks and core
-func validateMinWin(length, minWin int) error {
+// ValidateMinWin checks if minWin has been set too large to create proper flanks and core
+func ValidateMinWin(length, minWin int) error {
 	if length/3 <= minWin {
 		msg := fmt.Sprintf(
 			"minWin is too large, maximum allowed value is length/3 or %d\n",
@@ -139,8 +139,8 @@ func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte
 	return false
 }
 
-// useFullRange checks invariant conditions and returns if any are true
-func useFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
+// UseFullRange checks invariant conditions and returns if any are true
+func UseFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
 	return anyBlocksWoAllSites(bestWindow, uceAln, chars) || anyUndeterminedBlocks(bestWindow, uceAln, chars)
 }
 

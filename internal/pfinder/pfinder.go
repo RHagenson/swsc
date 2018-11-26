@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 )
 
 // WriteStartBlock writes PartitionFinder2 configuration header/start block

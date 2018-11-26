@@ -1,9 +1,9 @@
-package main
+package internal
 
 import (
 	"math"
 
-	"bitbucket.org/rhagenson/swsc/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"github.com/pkg/errors"
 )
 
@@ -21,17 +21,17 @@ func (w *Window) Stop() int {
 }
 
 func getAllWindows(uceAln nexus.Alignment, minWin int) []Window {
-	windows, _ := generateWindows(uceAln.Len(), minWin)
+	windows, _ := GenerateWindows(uceAln.Len(), minWin)
 	return windows
 }
 
-// generateWindows produces windows of at least a minimum size given a total length
+// GenerateWindows produces windows of at least a minimum size given a total length
 // Windows must be:
 //   1) at least minimum window from the start of the UCE (ie, first start at minimum+1)
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
-func generateWindows(length, min int) ([]Window, error) {
+func GenerateWindows(length, min int) ([]Window, error) {
 	if min > length/3 {
 		return nil, errors.New("minimum window size is too large")
 	}

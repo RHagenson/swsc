@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/pfinder"
+	"bitbucket.org/rhagenson/swsc/internal/pfinder"
 )
 
 func TestWriteStartBlock(t *testing.T) {

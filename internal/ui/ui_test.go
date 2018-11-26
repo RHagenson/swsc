@@ -5,7 +5,7 @@ import (
 	"path"
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 )
 
 var weirdUTF = []struct {

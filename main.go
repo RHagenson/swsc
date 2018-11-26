@@ -8,9 +8,10 @@ import (
 	"sort"
 	"strings"
 
-	"bitbucket.org/rhagenson/swsc/nexus"
-	"bitbucket.org/rhagenson/swsc/pfinder"
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/pfinder"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 	"github.com/spf13/pflag"
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
@@ -40,7 +41,7 @@ var (
 	pFinderFileName = ""
 	pfinderFile     = new(os.File)
 	datasetName     = ""
-	metrics         = make([]Metric, 0)
+	metrics         = make([]internal.Metric, 0)
 )
 
 func setup() {
@@ -73,10 +74,10 @@ func setup() {
 		pFinderFileName = path.Join(path.Dir(*write), datasetName) + ".cfg"
 	}
 	if *entropy {
-		metrics = append(metrics, Entropy)
+		metrics = append(metrics, internal.Entropy)
 	}
 	if *gc {
-		metrics = append(metrics, GC)
+		metrics = append(metrics, internal.GC)
 	}
 }
 
@@ -101,7 +102,7 @@ func main() {
 	}
 
 	// Write the header to the output file
-	writeOutputHeader(out)
+	internal.WriteOutputHeader(out)
 
 	// If PartitionFinder2 config file is desired, write its header/starting block
 	if *cfg {
@@ -116,7 +117,7 @@ func main() {
 	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := validateMinWin(nex.Alignment().Len(), *minWin); err != nil {
+	if err := internal.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
 		ui.Errorf("Early exit: %v", err)
 	}
 
@@ -164,13 +165,13 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := processUce(uceAln, metrics, *minWin, nex.Letters())
+		bestWindows, metricArray := internal.ProcessUce(uceAln, metrics, *minWin, nex.Letters())
 
 		if *cfg {
 			for _, bestWindow := range bestWindows {
 				pfinder.WriteConfigBlock(
 					pfinderFile, name, bestWindow, start, stop,
-					useFullRange(bestWindow, aln, nex.Letters()),
+					internal.UseFullRange(bestWindow, aln, nex.Letters()),
 				)
 			}
 		}
@@ -178,7 +179,7 @@ func main() {
 		for i := range alnSites {
 			alnSites[i] = i + start
 		}
-		writeOutput(out, bestWindows, metricArray, alnSites, name)
+		internal.WriteOutput(out, bestWindows, metricArray, alnSites, name)
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")
@@ -193,35 +194,4 @@ func main() {
 	if *cfg {
 		pfinderFile.Close()
 	}
-}
-
-// processUce computes the corresponding metrics within the minimum window size,
-// returning the best window and list of values for each metric
-func processUce(uceAln nexus.Alignment, metrics []Metric, minWin int, chars []byte) (map[Metric]Window, map[Metric][]float64) {
-	var (
-		metricBestWindow = make(map[Metric]Window, len(metrics))
-		metricBestVals   = make(map[Metric][]float64, len(metrics))
-	)
-
-	windows := getAllWindows(uceAln, minWin)
-	inVarSites := invariantSites(uceAln, chars)
-
-	for _, m := range metrics {
-		switch m {
-		case Entropy:
-			metricBestVals[Entropy] = sitewiseEntropy(uceAln, chars)
-		case GC:
-			metricBestVals[GC] = sitewiseGc(uceAln)
-			// case "multi":
-			// 	metricBestVals["multi"] = sitewiseMulti(uceAln)
-		}
-	}
-	if len(windows) > 1 {
-		metricBestWindow = getBestWindows(metricBestVals, windows, uceAln.Len(), inVarSites)
-	} else {
-		for _, k := range metrics {
-			metricBestWindow[k] = windows[0]
-		}
-	}
-	return metricBestWindow, metricBestVals
 }

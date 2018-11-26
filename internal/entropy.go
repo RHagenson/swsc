@@ -1,7 +1,7 @@
-package main
+package internal
 
 import (
-	"bitbucket.org/rhagenson/swsc/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"gonum.org/v1/gonum/stat"
 )
 

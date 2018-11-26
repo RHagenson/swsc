@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
 )
 
 func TestNexus(t *testing.T) {

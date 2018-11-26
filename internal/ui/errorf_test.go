@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/ui"
+	"bitbucket.org/rhagenson/swsc/internal/ui"
 )
 
 func TestErrorf(t *testing.T) {

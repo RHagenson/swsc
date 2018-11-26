@@ -1,4 +1,4 @@
-package internal
+package writers
 
 import (
 	"encoding/csv"
@@ -6,7 +6,9 @@ import (
 	"io"
 	"strconv"
 
+	"bitbucket.org/rhagenson/swsc/internal/metric"
 	"bitbucket.org/rhagenson/swsc/internal/ui"
+	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
 
 // WriteOutputHeader truncates the *write file to only the header row
@@ -27,7 +29,7 @@ func WriteOutputHeader(f io.Writer) {
 }
 
 // WriteOutput appends partitioning data to output
-func WriteOutput(f io.Writer, bestWindows map[Metric]Window, metricArray map[Metric][]float64, alnSites []int, name string) {
+func WriteOutput(f io.Writer, bestWindows map[metric.Metric]windows.Window, metricArray map[metric.Metric][]float64, alnSites []int, name string) {
 	// Validate input
 	for k, v := range metricArray {
 		if len(v) != len(alnSites) {

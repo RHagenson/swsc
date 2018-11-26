@@ -1,13 +1,14 @@
-package internal
+package entropy
 
 import (
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"bitbucket.org/rhagenson/swsc/internal/utils"
 	"gonum.org/v1/gonum/stat"
 )
 
-// alignmentEntropy calculates entropies of characters
-func alignmentEntropy(aln nexus.Alignment, chars []byte) float64 {
-	bpFreq := bpFreqCalc(aln, chars)
+// AlignmentEntropy calculates entropies of characters
+func AlignmentEntropy(aln nexus.Alignment, chars []byte) float64 {
+	bpFreq := utils.BpFreqCalc(aln, chars)
 	entropy := entropyCalc(bpFreq)
 	return entropy
 }

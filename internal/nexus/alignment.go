@@ -69,3 +69,12 @@ func (aln Alignment) Len() (length int) {
 	}
 	return
 }
+
+func (aln Alignment) CountBases(bases []byte) map[byte]int {
+	counts := make(map[byte]int)
+	allSeqs := aln.String()
+	for _, char := range allSeqs {
+		counts[byte(char)]++
+	}
+	return counts
+}

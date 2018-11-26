@@ -1,6 +1,9 @@
-package internal
+package metric
 
-import "bitbucket.org/rhagenson/swsc/internal/nexus"
+import (
+	"bitbucket.org/rhagenson/swsc/internal/entropy"
+	"bitbucket.org/rhagenson/swsc/internal/nexus"
+)
 
 // Metric is an enum type denoting possible sitewise metrics to calculate
 type Metric int
@@ -77,24 +80,24 @@ func (m Metric) String() string {
 // 	return counts
 // }
 
-func sitewiseEntropy(aln nexus.Alignment, chars []byte) []float64 {
+func SitewiseEntropy(aln nexus.Alignment, chars []byte) []float64 {
 	entropies := make([]float64, aln.Len())
 	for i := 0; i < aln.Len(); i++ {
 		site := aln.Subseq(i, i+1)
-		entropies[i] = alignmentEntropy(site, chars)
+		entropies[i] = entropy.AlignmentEntropy(site, chars)
 	}
 	return entropies
 }
 
-// sitewiseBaseCounts returns a 4xN array of base counts where N is the number of sites
-func sitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
+// SitewiseBaseCounts returns a 4xN array of base counts where N is the number of sites
+func SitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
 	counts := make(map[byte][]int)
 	for _, l := range letters {
 		counts[l] = make([]int, uceAln.Len())
 	}
 	for i := 0; i < uceAln.Len(); i++ {
 		site := uceAln.Subseq(i, i+1)
-		bCounts := countBases(site, letters)
+		bCounts := site.CountBases(letters)
 		for k, v := range bCounts {
 			counts[k][i] += v
 		}
@@ -102,7 +105,7 @@ func sitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
 	return counts
 }
 
-func sitewiseGc(uceAln nexus.Alignment) []float64 {
+func SitewiseGc(uceAln nexus.Alignment) []float64 {
 	gc := make([]float64, uceAln.Len())
 	for i := range gc {
 		site := uceAln.Column(uint(i))

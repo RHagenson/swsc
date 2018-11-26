@@ -1,8 +1,10 @@
-package internal
+package windows
 
 import (
 	"math"
 
+	"bitbucket.org/rhagenson/swsc/internal/invariants"
+	"bitbucket.org/rhagenson/swsc/internal/metric"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -17,9 +19,9 @@ func sse(vs []float64) float64 {
 }
 
 func getSse(metric []float64, win Window, siteVar []bool) float64 {
-	leftAln := allInvariantSites(siteVar[:win.Start()])
-	coreAln := allInvariantSites(siteVar[win.Start():win.Stop()])
-	rightAln := allInvariantSites(siteVar[win.Stop():])
+	leftAln := invariants.AllInvariantSites(siteVar[:win.Start()])
+	coreAln := invariants.AllInvariantSites(siteVar[win.Start():win.Stop()])
+	rightAln := invariants.AllInvariantSites(siteVar[win.Stop():])
 
 	if leftAln || coreAln || rightAln {
 		return math.MaxFloat64
@@ -32,8 +34,8 @@ func getSse(metric []float64, win Window, siteVar []bool) float64 {
 }
 
 // getSses generalized getSse over each site window.
-func getSses(metrics map[Metric][]float64, win Window, siteVar []bool) map[Metric]float64 {
-	sses := make(map[Metric]float64, len(metrics))
+func getSses(metrics map[metric.Metric][]float64, win Window, siteVar []bool) map[metric.Metric]float64 {
+	sses := make(map[metric.Metric]float64, len(metrics))
 	for m := range metrics {
 		sses[m] = getSse(metrics[m], win, siteVar)
 	}

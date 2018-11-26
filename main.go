@@ -8,10 +8,14 @@ import (
 	"sort"
 	"strings"
 
-	"bitbucket.org/rhagenson/swsc/internal"
+	"bitbucket.org/rhagenson/swsc/internal/metric"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/pfinder"
+	"bitbucket.org/rhagenson/swsc/internal/uce"
 	"bitbucket.org/rhagenson/swsc/internal/ui"
+	"bitbucket.org/rhagenson/swsc/internal/utils"
+	"bitbucket.org/rhagenson/swsc/internal/windows"
+	"bitbucket.org/rhagenson/swsc/internal/writers"
 	"github.com/spf13/pflag"
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
@@ -41,7 +45,7 @@ var (
 	pFinderFileName = ""
 	pfinderFile     = new(os.File)
 	datasetName     = ""
-	metrics         = make([]internal.Metric, 0)
+	metrics         = make([]metric.Metric, 0)
 )
 
 func setup() {
@@ -74,10 +78,10 @@ func setup() {
 		pFinderFileName = path.Join(path.Dir(*write), datasetName) + ".cfg"
 	}
 	if *entropy {
-		metrics = append(metrics, internal.Entropy)
+		metrics = append(metrics, metric.Entropy)
 	}
 	if *gc {
-		metrics = append(metrics, internal.GC)
+		metrics = append(metrics, metric.GC)
 	}
 }
 
@@ -102,7 +106,7 @@ func main() {
 	}
 
 	// Write the header to the output file
-	internal.WriteOutputHeader(out)
+	writers.WriteOutputHeader(out)
 
 	// If PartitionFinder2 config file is desired, write its header/starting block
 	if *cfg {
@@ -117,7 +121,7 @@ func main() {
 	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := internal.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
+	if err := utils.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
 		ui.Errorf("Early exit: %v", err)
 	}
 
@@ -165,13 +169,13 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := internal.ProcessUce(uceAln, metrics, *minWin, nex.Letters())
+		bestWindows, metricArray := uce.ProcessUce(uceAln, metrics, *minWin, nex.Letters())
 
 		if *cfg {
 			for _, bestWindow := range bestWindows {
 				pfinder.WriteConfigBlock(
 					pfinderFile, name, bestWindow, start, stop,
-					internal.UseFullRange(bestWindow, aln, nex.Letters()),
+					windows.UseFullRange(bestWindow, aln, nex.Letters()),
 				)
 			}
 		}
@@ -179,7 +183,7 @@ func main() {
 		for i := range alnSites {
 			alnSites[i] = i + start
 		}
-		internal.WriteOutput(out, bestWindows, metricArray, alnSites, name)
+		writers.WriteOutput(out, bestWindows, metricArray, alnSites, name)
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")

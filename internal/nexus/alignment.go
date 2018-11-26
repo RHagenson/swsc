@@ -72,7 +72,8 @@ func (aln Alignment) Len() (length int) {
 	return
 }
 
-func (aln Alignment) BasesCount(bases []byte) map[byte]int {
+// Count returns the number of times each base in a set is found
+func (aln Alignment) Count(bases []byte) map[byte]int {
 	counts := make(map[byte]int)
 	allSeqs := aln.String()
 	for _, char := range allSeqs {
@@ -81,9 +82,11 @@ func (aln Alignment) BasesCount(bases []byte) map[byte]int {
 	return counts
 }
 
-func (aln Alignment) BasesFrequency(bases []byte) map[byte]float64 {
-	freqs := make(map[byte]float64)
-	baseCounts := aln.BasesCount(bases)
+// Frequency returns the normalized frequency of each base in a set
+// Note that bases that exist in the Alignment, but not in the set are ignored
+func (aln Alignment) Frequency(bases []byte) map[byte]float64 {
+	freqs := make(map[byte]float64, len(bases))
+	baseCounts := aln.Count(bases)
 	sumCounts := 0.0
 	for _, count := range baseCounts {
 		sumCounts += float64(count)

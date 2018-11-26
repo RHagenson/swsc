@@ -7,7 +7,7 @@ import (
 
 // AlignmentEntropy calculates entropies of characters
 func AlignmentEntropy(aln nexus.Alignment, chars []byte) float64 {
-	bpFreq := aln.BasesFrequency(chars)
+	bpFreq := aln.Frequency(chars)
 	entropy := entropyCalc(bpFreq)
 	return entropy
 }

@@ -97,7 +97,7 @@ func SitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
 	}
 	for i := 0; i < uceAln.Len(); i++ {
 		site := uceAln.Subseq(i, i+1)
-		bCounts := site.BasesCount(letters)
+		bCounts := site.Count(letters)
 		for k, v := range bCounts {
 			counts[k][i] += v
 		}

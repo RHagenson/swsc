@@ -12,11 +12,11 @@ import (
 // Window is an inclusive window into a UCE
 type Window [2]int
 
-func New(start, stop int) *Window {
+func New(start, stop int) Window {
 	if stop < start {
-		return &Window{stop, start}
+		return Window{stop, start}
 	}
-	return &Window{start, stop}
+	return Window{start, stop}
 }
 
 // Start is the starting position of a window
@@ -40,18 +40,17 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 	// columns = number of windows
 	// data = nil, allocate new backing slice
 	// Each "cell" of the matrix created by {metric}x{window} is the position-wise SSE for that combination
-	sses := make(map[metric.Metric]map[Window]float64, 3)
+	sses := make(map[metric.Metric]map[Window]float64)
 
 	// 2) Get SSE for each cell in array
 	for _, win := range windows {
 		// Get SSEs for a given Window
-		temp := getSses(metrics, win, inVarSites)
-		for m := range temp {
-			if _, ok := sses[m][win]; !ok {
+		for m, v := range getSses(metrics, win, inVarSites) {
+			if _, ok := sses[m]; !ok {
 				sses[m] = make(map[Window]float64, 0)
-				sses[m][win] = temp[m]
+				sses[m][win] = v
 			} else {
-				sses[m][win] = temp[m]
+				sses[m][win] = v
 			}
 		}
 	}

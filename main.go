@@ -61,9 +61,9 @@ func setup() {
 		pflag.Usage()
 		ui.Errorf("Must provide input and output names")
 	case !strings.HasSuffix(*read, ".nex"):
-		ui.Errorf("Input expected in .nex format, got %s format", path.Ext(*read))
+		ui.Errorf("Input expected to end in .nex, got %s", path.Ext(*read))
 	case !strings.HasSuffix(*write, ".csv"):
-		ui.Errorf("Output written in .csv format, got %s format", path.Ext(*write))
+		ui.Errorf("Output expected to end in .csv, got %s", path.Ext(*write))
 	case *minWin < 0:
 		ui.Errorf("Window size must be positive, got %d", *minWin)
 	case !(*entropy || *gc):

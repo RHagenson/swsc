@@ -1,11 +1,6 @@
 package nexus
 
-import (
-	"fmt"
-)
-
 // Alignment is a collection of equal length sequences
-// Appends missing characters (see Nexus.Missing()) to shorter sequences
 type Alignment []string
 
 // Column is the letters from each internal sequence at position p
@@ -29,24 +24,19 @@ func (aln Alignment) Seq(i uint) string {
 }
 
 // Subseq creates a slice from the original alignment
-// A negative argument is interpreted as ultimate start or end of alignment
+// An argument out of bounds is interpreted as ultimate start or end of alignment, relatively
 func (aln Alignment) Subseq(s, e int) Alignment {
 	subseqs := make(Alignment, aln.NSeq())
 	for i, seq := range aln {
 		switch {
-		case s < 0 && e < 0: // Whole alignment
-			subseqs[i] = seq[:]
-		case s < 0 && e <= aln.Len(): // Start to defined end
-			subseqs[i] = seq[:e]
-		case s < aln.Len() && e < 0: // Defined start to end
-			subseqs[i] = seq[s:]
-		case e <= aln.Len() && s < e: // Defined start to defined end
+		case 0 <= s && s < aln.Len() && 0 <= e && e < aln.Len(): // Defined start to defined end
 			subseqs[i] = seq[s:e]
+		case s < aln.Len() && (e < 0 || e > aln.Len()): // Defined start to ultimate end
+			subseqs[i] = seq[s:]
+		case (s < 0 || s > aln.Len()) && e < aln.Len(): // Ultimate start to defined end
+			subseqs[i] = seq[:e]
 		default:
-			msg := fmt.Sprintf("Requested out of bounds slice, "+
-				"bounds [%d:%d], requested [%d:%d]",
-				0, len(aln.Seq(0)), s, e)
-			panic(msg)
+			subseqs[i] = seq[:] // Whole alignment
 		}
 	}
 	return subseqs

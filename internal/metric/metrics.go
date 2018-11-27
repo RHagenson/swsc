@@ -1,6 +1,8 @@
 package metric
 
 import (
+	"strings"
+
 	"bitbucket.org/rhagenson/swsc/internal/entropy"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 )
@@ -108,10 +110,9 @@ func SitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
 func SitewiseGc(uceAln nexus.Alignment) []float64 {
 	gc := make([]float64, uceAln.Len())
 	for i := range gc {
-		site := uceAln.Column(uint(i))
-		// TODO: Will not compute properly if using lowercase letters
+		site := strings.ToTitle(string(uceAln.Column(uint(i))))
 		for _, nuc := range site {
-			if byte(nuc) == 'G' || byte(nuc) == 'C' {
+			if nuc == 'G' || nuc == 'C' {
 				gc[i]++
 			}
 		}

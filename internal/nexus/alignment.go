@@ -31,17 +31,17 @@ func (aln Alignment) Seq(i uint) string {
 // Subseq creates a slice from the original alignment
 // A negative argument is interpreted as ultimate start or end of alignment
 func (aln Alignment) Subseq(s, e int) Alignment {
-	subseqs := make(Alignment, 0)
-	for _, seq := range aln {
+	subseqs := make(Alignment, aln.NSeq())
+	for i, seq := range aln {
 		switch {
 		case s < 0 && e < 0: // Whole alignment
-			subseqs = append(subseqs, seq[:])
+			subseqs[i] = seq[:]
 		case s < 0 && e <= aln.Len(): // Start to defined end
-			subseqs = append(subseqs, seq[:e])
+			subseqs[i] = seq[:e]
 		case s < aln.Len() && e < 0: // Defined start to end
-			subseqs = append(subseqs, seq[s:])
+			subseqs[i] = seq[s:]
 		case e <= aln.Len() && s < e: // Defined start to defined end
-			subseqs = append(subseqs, seq[s:e])
+			subseqs[i] = seq[s:e]
 		default:
 			msg := fmt.Sprintf("Requested out of bounds slice, "+
 				"bounds [%d:%d], requested [%d:%d]",

@@ -23,9 +23,9 @@ func WriteOutputHeader(f io.Writer) {
 	}
 	file := csv.NewWriter(f)
 	if err := file.Write(header); err != nil {
-		file.Flush()
 		ui.Errorf("Problem writing output header: %s.", err)
 	}
+	file.Flush()
 	return
 }
 

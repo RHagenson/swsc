@@ -12,11 +12,11 @@ func TestAlignmentEntropy(t *testing.T) {
 		seqs []string
 		exp  float64
 	}{
-		{[]string{"ATGC", "ATGC", "ATGC"}, 1.609438}, // All the same
-		{[]string{"ATGC", "CGTA", "ATGC"}, 1.609438}, // One reversed
-		{[]string{"ATAT", "GCGC", "TGTG"}, 1.564132}, // No positional matches
-		{[]string{"GGGG", "TTTT", "CCCC"}, 1.379292}, // Not all bases present
-		{[]string{"CCCC", "CCCC", "CCCC"}, 0.500402}, // All same base
+		{[]string{"ATGC", "ATGC", "ATGC"}, 1.386294}, // All the same
+		{[]string{"ATGC", "CGTA", "ATGC"}, 1.386294}, // One reversed
+		{[]string{"ATAT", "GCGC", "TGTG"}, 1.329661}, // No positional matches
+		{[]string{"GGGG", "TTTT", "CCCC"}, 1.098612}, // Not all bases present
+		{[]string{"CCCC", "CCCC", "CCCC"}, 0.000000}, // All same base
 	}
 
 	for _, tc := range tt {

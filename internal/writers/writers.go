@@ -2,7 +2,6 @@ package writers
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -31,15 +30,6 @@ func WriteOutputHeader(f io.Writer) {
 
 // WriteOutput appends partitioning data to output
 func WriteOutput(f io.Writer, bestWindows map[metric.Metric]windows.Window, metricArray map[metric.Metric][]float64, alnSites []int, name string) {
-	// Validate input
-	for k, v := range metricArray {
-		if len(v) != len(alnSites) {
-			msg := fmt.Sprintf("Not enough alignment sites "+
-				"(%d) produced to match metric %q of len %d",
-				len(alnSites), k, len(v))
-			ui.Errorf(msg)
-		}
-	}
 	d := make([][]string, len(metricArray)*len(alnSites))
 	N := len(alnSites)
 	middle := int(math.Ceil(float64(N) / 2.0))
@@ -52,11 +42,11 @@ func WriteOutput(f io.Writer, bestWindows map[metric.Metric]windows.Window, metr
 	mNum := 0
 	for m, v := range metricArray {
 		window := bestWindows[m]
-		for i, abs := range alnSites {
+		for i := range v {
 			d[mNum+i] = []string{
 				name,                                  // 1) UCE name
 				strconv.Itoa(uceSites[i]),             // 2) UCE site position relative to center of alignment
-				strconv.Itoa(abs),                     // 3) UCE site position absolute
+				strconv.Itoa(alnSites[i]),             // 3) UCE site position absolute
 				strconv.Itoa(window.Start()),          // 4) Best window for metric, start
 				strconv.Itoa(window.Stop() + 1),       // 5) Best window for metric, stop
 				m.String(),                            // 6) Metric under analysis

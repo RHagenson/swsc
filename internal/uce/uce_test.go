@@ -3,7 +3,7 @@ package uce_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/uce"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
@@ -13,11 +13,11 @@ import (
 func TestProcessUce(t *testing.T) {
 	tt := []struct {
 		aln     nexus.Alignment
-		metrics []metric.Metric
+		metrics []metrics.Metric
 		minWin  int
 		chars   []byte
-		expWins map[metric.Metric]windows.Window
-		expVals map[metric.Metric][]float64
+		expWins map[metrics.Metric]windows.Window
+		expVals map[metrics.Metric][]float64
 	}{
 		{ // All the same seq
 			nexus.Alignment([]string{
@@ -25,15 +25,15 @@ func TestProcessUce(t *testing.T) {
 				"ATGCAT",
 				"ATGCAT",
 			}),
-			[]metric.Metric{metric.Entropy, metric.GC},
+			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
-			map[metric.Metric]windows.Window{
-				metric.Entropy: windows.Window{2, 5},
-				metric.GC:      windows.Window{2, 5},
+			map[metrics.Metric]windows.Window{
+				metrics.Entropy: windows.Window{2, 5},
+				metrics.GC:      windows.Window{2, 5},
 			},
-			map[metric.Metric][]float64{
-				metric.Entropy: []float64{
+			map[metrics.Metric][]float64{
+				metrics.Entropy: []float64{
 					0.0,
 					0.0,
 					0.0,
@@ -41,7 +41,7 @@ func TestProcessUce(t *testing.T) {
 					0.0,
 					0.0,
 				},
-				metric.GC: []float64{
+				metrics.GC: []float64{
 					0,
 					0,
 					1,
@@ -57,15 +57,15 @@ func TestProcessUce(t *testing.T) {
 		// 		"ATGCAT",
 		// 		"TACGTA",
 		// 	}),
-		// 	[]metric.Metric{metric.Entropy, metric.GC},
+		// 	[]metrics.Metric{metrics.Entropy, metrics.GC},
 		// 	2,
 		// 	[]byte("ATGC"),
-		// 	map[metric.Metric]windows.Window{
-		// 		metric.Entropy: windows.Window{2, 5},
-		// 		metric.GC:      windows.Window{2, 5},
+		// 	map[metrics.Metric]windows.Window{
+		// 		metrics.Entropy: windows.Window{2, 5},
+		// 		metrics.GC:      windows.Window{2, 5},
 		// 	},
-		// 	map[metric.Metric][]float64{
-		// 		metric.Entropy: []float64{
+		// 	map[metrics.Metric][]float64{
+		// 		metrics.Entropy: []float64{
 		// 			0.6365141682948128,
 		// 			0.6365141682948128,
 		// 			0.6365141682948128,
@@ -73,7 +73,7 @@ func TestProcessUce(t *testing.T) {
 		// 			0.6365141682948128,
 		// 			1.3296613488547580,
 		// 		},
-		// 		metric.GC: []float64{
+		// 		metrics.GC: []float64{
 		// 			0 / 3,
 		// 			0 / 3,
 		// 			3.0 / 3.0,
@@ -89,15 +89,15 @@ func TestProcessUce(t *testing.T) {
 		// 		"TGCTGA",
 		// 		"GCTACC",
 		// 	}),
-		// 	[]metric.Metric{metric.Entropy, metric.GC},
+		// 	[]metrics.Metric{metrics.Entropy, metrics.GC},
 		// 	2,
 		// 	[]byte("ATGC"),
-		// 	map[metric.Metric]windows.Window{
-		// 		metric.Entropy: windows.Window{2, 5},
-		// 		metric.GC:      windows.Window{2, 5},
+		// 	map[metrics.Metric]windows.Window{
+		// 		metrics.Entropy: windows.Window{2, 5},
+		// 		metrics.GC:      windows.Window{2, 5},
 		// 	},
-		// 	map[metric.Metric][]float64{
-		// 		metric.Entropy: []float64{
+		// 	map[metrics.Metric][]float64{
+		// 		metrics.Entropy: []float64{
 		// 			1.0986122886681096,
 		// 			1.0986122886681096,
 		// 			1.0986122886681096,
@@ -105,7 +105,7 @@ func TestProcessUce(t *testing.T) {
 		// 			1.0986122886681096,
 		// 			1.3801087571572686,
 		// 		},
-		// 		metric.GC: []float64{
+		// 		metrics.GC: []float64{
 		// 			1.0 / 3.0,
 		// 			2.0 / 3.0,
 		// 			2.0 / 3.0,
@@ -121,15 +121,15 @@ func TestProcessUce(t *testing.T) {
 		// 		"TTTTTT",
 		// 		"GGGGGG",
 		// 	}),
-		// 	[]metric.Metric{metric.Entropy, metric.GC},
+		// 	[]metrics.Metric{metrics.Entropy, metrics.GC},
 		// 	2,
 		// 	[]byte("ATGC"),
-		// 	map[metric.Metric]windows.Window{
-		// 		metric.Entropy: windows.Window{2, 5},
-		// 		metric.GC:      windows.Window{2, 5},
+		// 	map[metrics.Metric]windows.Window{
+		// 		metrics.Entropy: windows.Window{2, 5},
+		// 		metrics.GC:      windows.Window{2, 5},
 		// 	},
-		// 	map[metric.Metric][]float64{
-		// 		metric.Entropy: []float64{
+		// 	map[metrics.Metric][]float64{
+		// 		metrics.Entropy: []float64{
 		// 			1.098612288668110,
 		// 			1.098612288668110,
 		// 			1.098612288668110,
@@ -137,7 +137,7 @@ func TestProcessUce(t *testing.T) {
 		// 			1.098612288668110,
 		// 			1.098612288668110,
 		// 		},
-		// 		metric.GC: []float64{
+		// 		metrics.GC: []float64{
 		// 			2.0 / 3.0,
 		// 			2.0 / 3.0,
 		// 			2.0 / 3.0,
@@ -153,15 +153,15 @@ func TestProcessUce(t *testing.T) {
 		// 		"CCCCCC",
 		// 		"CCCCCC",
 		// 	}),
-		// 	[]metric.Metric{metric.Entropy, metric.GC},
+		// 	[]metrics.Metric{metrics.Entropy, metrics.GC},
 		// 	2,
 		// 	[]byte("ATGC"),
-		// 	map[metric.Metric]windows.Window{
-		// 		metric.Entropy: windows.Window{2, 5},
-		// 		metric.GC:      windows.Window{2, 5},
+		// 	map[metrics.Metric]windows.Window{
+		// 		metrics.Entropy: windows.Window{2, 5},
+		// 		metrics.GC:      windows.Window{2, 5},
 		// 	},
-		// 	map[metric.Metric][]float64{
-		// 		metric.Entropy: []float64{
+		// 	map[metrics.Metric][]float64{
+		// 		metrics.Entropy: []float64{
 		// 			0.0,
 		// 			0.0,
 		// 			0.0,
@@ -169,7 +169,7 @@ func TestProcessUce(t *testing.T) {
 		// 			0.0,
 		// 			0.0,
 		// 		},
-		// 		metric.GC: []float64{
+		// 		metrics.GC: []float64{
 		// 			3.0 / 3.0,
 		// 			3.0 / 3.0,
 		// 			3.0 / 3.0,
@@ -185,15 +185,15 @@ func TestProcessUce(t *testing.T) {
 		// 		"CCCCCCCC",
 		// 		"CCCCCCCC",
 		// 	}),
-		// 	[]metric.Metric{metric.Entropy, metric.GC},
+		// 	[]metrics.Metric{metrics.Entropy, metrics.GC},
 		// 	2,
 		// 	[]byte("ATGC"),
-		// 	map[metric.Metric]windows.Window{
-		// 		metric.Entropy: windows.Window{2, 5},
-		// 		metric.GC:      windows.Window{2, 5},
+		// 	map[metrics.Metric]windows.Window{
+		// 		metrics.Entropy: windows.Window{2, 5},
+		// 		metrics.GC:      windows.Window{2, 5},
 		// 	},
-		// 	map[metric.Metric][]float64{
-		// 		metric.Entropy: []float64{
+		// 	map[metrics.Metric][]float64{
+		// 		metrics.Entropy: []float64{
 		// 			0.0,
 		// 			0.0,
 		// 			0.0,
@@ -203,7 +203,7 @@ func TestProcessUce(t *testing.T) {
 		// 			0.0,
 		// 			0.0,
 		// 		},
-		// 		metric.GC: []float64{
+		// 		metrics.GC: []float64{
 		// 			3.0 / 3.0,
 		// 			3.0 / 3.0,
 		// 			3.0 / 3.0,

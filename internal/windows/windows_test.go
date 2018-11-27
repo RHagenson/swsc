@@ -3,7 +3,7 @@ package windows_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
@@ -140,15 +140,15 @@ func TestGetAll(t *testing.T) {
 
 func TestGetBest(t *testing.T) {
 	tt := []struct {
-		metrics    map[metric.Metric][]float64
+		metrics    map[metrics.Metric][]float64
 		windows    []windows.Window
 		alnLen     int
 		inVarSites []bool
-		exp        map[metric.Metric]windows.Window
+		exp        map[metrics.Metric]windows.Window
 	}{
 		{
-			map[metric.Metric][]float64{
-				metric.Entropy: []float64{
+			map[metrics.Metric][]float64{
+				metrics.Entropy: []float64{
 					2.694,
 					1.438,
 					1.210,
@@ -167,8 +167,8 @@ func TestGetBest(t *testing.T) {
 			},
 			8,
 			[]bool{false, false, false, true, false, true},
-			map[metric.Metric]windows.Window{
-				metric.Entropy: windows.New(3, 5),
+			map[metrics.Metric]windows.Window{
+				metrics.Entropy: windows.New(3, 5),
 			},
 		},
 	}

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/pfinder"
 	"bitbucket.org/rhagenson/swsc/internal/uce"
@@ -45,7 +45,7 @@ var (
 var (
 	pfinderFile = new(os.File)
 	datasetName = ""
-	metrics     = make([]metric.Metric, 0)
+	mets        = make([]metrics.Metric, 0)
 )
 
 func setup() {
@@ -76,10 +76,10 @@ func setup() {
 	// Set global vars
 	datasetName = strings.TrimRight(path.Base(*read), ".nex")
 	if *entropy {
-		metrics = append(metrics, metric.Entropy)
+		mets = append(mets, metrics.Entropy)
 	}
 	if *gc {
-		metrics = append(metrics, metric.GC)
+		mets = append(mets, metrics.GC)
 	}
 }
 
@@ -171,7 +171,7 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := uce.ProcessUce(uceAln, metrics, *minWin, nex.Letters())
+		bestWindows, metricArray := uce.ProcessUce(uceAln, mets, *minWin, nex.Letters())
 
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {

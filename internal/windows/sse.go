@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"bitbucket.org/rhagenson/swsc/internal/invariants"
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -34,10 +34,10 @@ func getSse(metric []float64, win Window, siteVar []bool) float64 {
 }
 
 // getSses generalized getSse over each site window.
-func getSses(metrics map[metric.Metric][]float64, win Window, siteVar []bool) map[metric.Metric]float64 {
-	sses := make(map[metric.Metric]float64, len(metrics))
-	for m := range metrics {
-		sses[m] = getSse(metrics[m], win, siteVar)
+func getSses(mets map[metrics.Metric][]float64, win Window, siteVar []bool) map[metrics.Metric]float64 {
+	sses := make(map[metrics.Metric]float64, len(mets))
+	for m := range mets {
+		sses[m] = getSse(mets[m], win, siteVar)
 	}
 	return sses
 }

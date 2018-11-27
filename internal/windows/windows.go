@@ -4,7 +4,7 @@ import (
 	"math"
 	"sort"
 
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/utils"
 	"gonum.org/v1/gonum/floats"
@@ -36,18 +36,18 @@ func GetAll(uceAln nexus.Alignment, minWin int) []Window {
 	return windows
 }
 
-func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, inVarSites []bool) map[metric.Metric]Window {
+func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, inVarSites []bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
 	// data = nil, allocate new backing slice
 	// Each "cell" of the matrix created by {metric}x{window} is the position-wise SSE for that combination
-	sses := make(map[metric.Metric]map[Window]float64)
+	sses := make(map[metrics.Metric]map[Window]float64)
 
 	// 2) Get SSE for each cell in array
 	for _, win := range windows {
 		// Get SSEs for a given Window
-		for m, v := range getSses(metrics, win, inVarSites) {
+		for m, v := range getSses(mets, win, inVarSites) {
 			if _, ok := sses[m]; !ok {
 				sses[m] = make(map[Window]float64, 1)
 				sses[m][win] = v
@@ -58,7 +58,7 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 	}
 
 	// Find minimum values and record the window(s) they occur in
-	minMetricWindows := make(map[metric.Metric][]Window)
+	minMetricWindows := make(map[metrics.Metric][]Window)
 	for m, windows := range sses {
 		bestVal := math.MaxFloat64
 		for w, val := range windows {
@@ -71,7 +71,7 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 		}
 	}
 
-	absMinWindow := make(map[metric.Metric]Window)
+	absMinWindow := make(map[metrics.Metric]Window)
 	for m := range minMetricWindows {
 		/*
 			Sort windows before calculating window variances

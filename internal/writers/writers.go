@@ -6,7 +6,7 @@ import (
 	"math"
 	"strconv"
 
-	"bitbucket.org/rhagenson/swsc/internal/metric"
+	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/ui"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
@@ -29,7 +29,7 @@ func WriteOutputHeader(f io.Writer) {
 }
 
 // WriteOutput appends partitioning data to output
-func WriteOutput(f io.Writer, bestWindows map[metric.Metric]windows.Window, metricArray map[metric.Metric][]float64, alnSites []int, name string) {
+func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, metricArray map[metrics.Metric][]float64, alnSites []int, name string) {
 	d := make([][]string, len(metricArray)*len(alnSites))
 	N := len(alnSites)
 	middle := int(math.Ceil(float64(N) / 2.0))

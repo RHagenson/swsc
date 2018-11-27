@@ -31,9 +31,9 @@ func (aln Alignment) Subseq(s, e int) Alignment {
 		switch {
 		case 0 <= s && s < aln.Len() && 0 <= e && e < aln.Len(): // Defined start to defined end
 			subseqs[i] = seq[s:e]
-		case s < aln.Len() && (e < 0 || e > aln.Len()): // Defined start to ultimate end
+		case 0 <= s && s < aln.Len() && (e < 0 || aln.Len() <= e): // Defined start to ultimate end
 			subseqs[i] = seq[s:]
-		case (s < 0 || s > aln.Len()) && e < aln.Len(): // Ultimate start to defined end
+		case (s < 0 || aln.Len() <= s) && 0 <= e && e < aln.Len(): // Ultimate start to defined end
 			subseqs[i] = seq[:e]
 		default:
 			subseqs[i] = seq[:] // Whole alignment
@@ -65,9 +65,13 @@ func (aln Alignment) Len() (length int) {
 // Count returns the number of times each base in a set is found
 func (aln Alignment) Count(bases []byte) map[byte]int {
 	counts := make(map[byte]int)
-	allSeqs := aln.String()
-	for _, char := range allSeqs {
-		counts[byte(char)]++
+	for _, b := range bases {
+		counts[b] = 0
+	}
+	for _, seq := range aln {
+		for _, char := range seq {
+			counts[byte(char)]++
+		}
 	}
 	return counts
 }
@@ -76,6 +80,9 @@ func (aln Alignment) Count(bases []byte) map[byte]int {
 // Note that bases that exist in the Alignment, but not in the set are ignored
 func (aln Alignment) Frequency(bases []byte) map[byte]float64 {
 	freqs := make(map[byte]float64, len(bases))
+	for _, b := range bases {
+		freqs[b] = 0.0
+	}
 	baseCounts := aln.Count(bases)
 	sumCounts := 0.0
 	for _, count := range baseCounts {

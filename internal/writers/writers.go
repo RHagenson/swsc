@@ -52,11 +52,11 @@ func WriteOutput(f io.Writer, bestWindows map[metric.Metric]windows.Window, metr
 	mNum := 0
 	for m, v := range metricArray {
 		window := bestWindows[m]
-		for i := range alnSites {
+		for i, abs := range alnSites {
 			d[mNum+i] = []string{
 				name,                                  // 1) UCE name
 				strconv.Itoa(uceSites[i]),             // 2) UCE site position relative to center of alignment
-				strconv.Itoa(i),                       // 3) UCE site position absolute
+				strconv.Itoa(abs),                     // 3) UCE site position absolute
 				strconv.Itoa(window.Start()),          // 4) Best window for metric, start
 				strconv.Itoa(window.Stop() + 1),       // 5) Best window for metric, stop
 				m.String(),                            // 6) Metric under analysis

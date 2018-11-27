@@ -2,10 +2,12 @@ package windows
 
 import (
 	"math"
+	"sort"
 
 	"bitbucket.org/rhagenson/swsc/internal/metric"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/utils"
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -47,7 +49,7 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 		// Get SSEs for a given Window
 		for m, v := range getSses(metrics, win, inVarSites) {
 			if _, ok := sses[m]; !ok {
-				sses[m] = make(map[Window]float64, 0)
+				sses[m] = make(map[Window]float64, 1)
 				sses[m][win] = v
 			} else {
 				sses[m][win] = v
@@ -63,15 +65,31 @@ func GetBest(metrics map[metric.Metric][]float64, windows []Window, alnLen int, 
 			if val < bestVal {
 				bestVal = val
 				minMetricWindows[m] = []Window{w}
-			} else if val == bestVal {
+			} else if floats.EqualWithinAbs(val, bestVal, 1e-10) {
 				minMetricWindows[m] = append(minMetricWindows[m], w)
 			}
 		}
-
 	}
+
 	absMinWindow := make(map[metric.Metric]Window)
 	for m := range minMetricWindows {
-		absMinWindow[m] = getMinVarWindow(minMetricWindows[m], alnLen)
+		/*
+			Sort windows before calculating window variances
+			Must be done or the random order means equal sized windows are equivalent
+			TODO: Devise a better method to resolve ties. This way an earlier window is preferred.
+		*/
+		wins := minMetricWindows[m]
+		sort.SliceStable(wins[:], func(i, j int) bool {
+			// Lowest Start first
+			return wins[i].Start() < wins[j].Start()
+		})
+		sort.SliceStable(wins[:], func(i, j int) bool {
+			// Smallest window first
+			wini := wins[i].Stop() - wins[i].Start()
+			winj := wins[j].Stop() - wins[j].Start()
+			return wini < winj
+		})
+		absMinWindow[m] = getMinVarWindow(wins, alnLen)
 	}
 
 	return absMinWindow

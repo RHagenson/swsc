@@ -149,12 +149,12 @@ func TestGetBest(t *testing.T) {
 		{
 			map[metric.Metric][]float64{
 				metric.Entropy: []float64{
-					1.694,
+					2.694,
 					1.438,
-					1.610,
-					0,
-					1.608,
-					0,
+					1.210,
+					1.110,
+					0.005,
+					0.000,
 				},
 			},
 			[]windows.Window{
@@ -166,9 +166,9 @@ func TestGetBest(t *testing.T) {
 				windows.New(3, 6),
 			},
 			8,
-			[]bool{false, false, false, false, false, false},
+			[]bool{false, false, false, true, false, true},
 			map[metric.Metric]windows.Window{
-				metric.Entropy: windows.New(2, 5),
+				metric.Entropy: windows.New(3, 5),
 			},
 		},
 	}

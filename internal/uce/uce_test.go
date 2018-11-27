@@ -189,8 +189,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metric.Metric]windows.Window{
-				metric.Entropy: windows.Window{4, 7},
-				metric.GC:      windows.Window{4, 7},
+				metric.Entropy: windows.Window{2, 5},
+				metric.GC:      windows.Window{2, 5},
 			},
 			map[metric.Metric][]float64{
 				metric.Entropy: []float64{

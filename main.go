@@ -124,7 +124,7 @@ func main() {
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
 	if err := utils.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
-		ui.Errorf("Early exit: %v", err)
+		ui.Errorf("Failed due to: %v", err)
 	}
 
 	var (

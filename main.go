@@ -44,7 +44,6 @@ var (
 
 // Global reference vars
 var (
-	pfinderFile = new(os.File)
 	datasetName = ""
 	mets        = make([]metrics.Metric, 0, 3)
 )
@@ -105,18 +104,6 @@ func main() {
 		ui.Errorf("Failed due to: %v", err)
 	}
 
-	// If PartitionFinder2 config file is desired, write its starting block
-	if *cfg != "" {
-		pfinderFile, err = os.Create(*cfg)
-		if err != nil {
-			ui.Errorf("Could not read PartitionFinder2 file: %s", err)
-		}
-		block := pfinder.StartBlock(datasetName)
-		if _, err := io.WriteString(pfinderFile, block); err != nil {
-			ui.Errorf("Failed to write .cfg start block: %s", err)
-		}
-	}
-
 	out, err := os.Create(*write)
 	defer out.Close()
 	if err != nil {
@@ -151,6 +138,7 @@ func main() {
 	sort.Ints(keys) // Sort done in place
 
 	// Process each UCE in turn
+	pFinderConfigBlocks := make([]string, 0, len(uces))
 	for _, key := range keys {
 		name := revUCEs[key]
 		sites := uces[name]
@@ -177,10 +165,7 @@ func main() {
 					name, bestWindow, start, stop,
 					windows.UseFullRange(bestWindow, aln, nex.Letters()),
 				)
-				if _, err := io.WriteString(pfinderFile, block); err != nil {
-					ui.Errorf("Failed to write .cfg config block: %s", err)
-				}
-
+				pFinderConfigBlocks = append(pFinderConfigBlocks, block)
 			}
 		}
 		alnSites := make([]int, stop-start)
@@ -191,8 +176,23 @@ func main() {
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")
+
 	if *cfg != "" {
-		block := pfinder.EndBlock()
+		pfinderFile, err := os.Create(*cfg)
+		defer pfinderFile.Close()
+		if err != nil {
+			ui.Errorf("Could not create PartitionFinder2 file: %s", err)
+		}
+		block := pfinder.StartBlock(datasetName)
+		if _, err := io.WriteString(pfinderFile, block); err != nil {
+			ui.Errorf("Failed to write .cfg start block: %s", err)
+		}
+		for _, b := range pFinderConfigBlocks {
+			if _, err := io.WriteString(pfinderFile, b); err != nil {
+				ui.Errorf("Failed to write .cfg config block: %s", err)
+			}
+		}
+		block = pfinder.EndBlock()
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write .cfg end block: %s", err)
 		}
@@ -200,9 +200,4 @@ func main() {
 
 	// Inform user of where output was written
 	fmt.Println(ui.Footer(*write))
-
-	// Close the config file if it was opened
-	if *cfg != "" {
-		pfinderFile.Close()
-	}
 }

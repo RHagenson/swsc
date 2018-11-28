@@ -36,7 +36,7 @@ func GetAll(uceAln nexus.Alignment, minWin int) []Window {
 	return windows
 }
 
-func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, inVarSites []bool) map[metrics.Metric]Window {
+func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
@@ -83,12 +83,21 @@ func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, in
 			// Lowest Start first
 			return wins[i].Start() < wins[j].Start()
 		})
-		sort.SliceStable(wins[:], func(i, j int) bool {
-			// Smallest window first
-			wini := wins[i].Stop() - wins[i].Start()
-			winj := wins[j].Stop() - wins[j].Start()
-			return wini < winj
-		})
+		if largeCore {
+			sort.SliceStable(wins[:], func(i, j int) bool {
+				// Smallest window first
+				wini := wins[i].Stop() - wins[i].Start()
+				winj := wins[j].Stop() - wins[j].Start()
+				return wini > winj
+			})
+		} else {
+			sort.SliceStable(wins[:], func(i, j int) bool {
+				// Smallest window first
+				wini := wins[i].Stop() - wins[i].Start()
+				winj := wins[j].Stop() - wins[j].Start()
+				return wini < winj
+			})
+		}
 		absMinWindow[m] = getMinVarWindow(wins, alnLen)
 	}
 

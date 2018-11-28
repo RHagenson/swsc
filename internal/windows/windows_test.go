@@ -145,6 +145,7 @@ func TestGetBest(t *testing.T) {
 		alnLen     int
 		inVarSites []bool
 		exp        map[metrics.Metric]windows.Window
+		largeCore  bool
 	}{
 		{
 			map[metrics.Metric][]float64{
@@ -170,11 +171,12 @@ func TestGetBest(t *testing.T) {
 			map[metrics.Metric]windows.Window{
 				metrics.Entropy: windows.New(3, 5),
 			},
+			false,
 		},
 	}
 
 	for _, tc := range tt {
-		got := windows.GetBest(tc.metrics, tc.windows, tc.alnLen, tc.inVarSites)
+		got := windows.GetBest(tc.metrics, tc.windows, tc.alnLen, tc.inVarSites, tc.largeCore)
 		for m, v := range tc.exp {
 			if got[m] != v {
 				t.Errorf("Got: %v, Expected: %v", got[m], v)

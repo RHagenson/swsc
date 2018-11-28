@@ -30,8 +30,9 @@ var (
 
 // General use flags
 var (
-	minWin = pflag.Int("minWin", 50, "Minimum window size")
-	help   = pflag.Bool("help", false, "Print help and exit")
+	minWin    = pflag.Int("minWin", 50, "Minimum window size")
+	largeCore = pflag.Bool("largeCore", false, "When a small and large core have equivalent metrics, choose the large core")
+	help      = pflag.Bool("help", false, "Print help and exit")
 )
 
 // Metric flags
@@ -114,7 +115,6 @@ func main() {
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write .cfg start block: %s", err)
 		}
-
 	}
 
 	out, err := os.Create(*write)
@@ -169,7 +169,7 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := uce.ProcessUce(uceAln, mets, *minWin, nex.Letters())
+		bestWindows, metricArray := uce.ProcessUce(uceAln, mets, *minWin, nex.Letters(), *largeCore)
 
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {

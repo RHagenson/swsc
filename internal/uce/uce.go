@@ -9,7 +9,7 @@ import (
 
 // ProcessUce computes the corresponding metrics within the minimum window size,
 // returning the best window and list of values for each metric
-func ProcessUce(uceAln nexus.Alignment, mets []metrics.Metric, minWin int, chars []byte) (map[metrics.Metric]windows.Window, map[metrics.Metric][]float64) {
+func ProcessUce(uceAln nexus.Alignment, mets []metrics.Metric, minWin int, chars []byte, largeCore bool) (map[metrics.Metric]windows.Window, map[metrics.Metric][]float64) {
 	var (
 		metricBestWindow = make(map[metrics.Metric]windows.Window, len(mets))
 		metricBestVals   = make(map[metrics.Metric][]float64, len(mets))
@@ -29,7 +29,7 @@ func ProcessUce(uceAln nexus.Alignment, mets []metrics.Metric, minWin int, chars
 		}
 	}
 	if len(wins) > 1 {
-		metricBestWindow = windows.GetBest(metricBestVals, wins, uceAln.Len(), inVarSites)
+		metricBestWindow = windows.GetBest(metricBestVals, wins, uceAln.Len(), inVarSites, largeCore)
 	} else {
 		for _, k := range mets {
 			metricBestWindow[k] = wins[0]

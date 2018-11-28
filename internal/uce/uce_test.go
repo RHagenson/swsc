@@ -12,12 +12,13 @@ import (
 
 func TestProcessUce(t *testing.T) {
 	tt := []struct {
-		aln     nexus.Alignment
-		metrics []metrics.Metric
-		minWin  int
-		chars   []byte
-		expWins map[metrics.Metric]windows.Window
-		expVals map[metrics.Metric][]float64
+		aln       nexus.Alignment
+		metrics   []metrics.Metric
+		minWin    int
+		chars     []byte
+		expWins   map[metrics.Metric]windows.Window
+		expVals   map[metrics.Metric][]float64
+		largeCore bool
 	}{
 		{ // All the same seq
 			nexus.Alignment([]string{
@@ -50,6 +51,7 @@ func TestProcessUce(t *testing.T) {
 					0,
 				},
 			},
+			false,
 		},
 		{ // One seq reversed
 			nexus.Alignment([]string{
@@ -82,6 +84,7 @@ func TestProcessUce(t *testing.T) {
 					0 / 3,
 				},
 			},
+			false,
 		},
 		{ // No positional matches
 			nexus.Alignment([]string{
@@ -114,6 +117,7 @@ func TestProcessUce(t *testing.T) {
 					1.0 / 3.0,
 				},
 			},
+			false,
 		},
 		{ // Not all bases present
 			nexus.Alignment([]string{
@@ -146,6 +150,7 @@ func TestProcessUce(t *testing.T) {
 					2.0 / 3.0,
 				},
 			},
+			false,
 		},
 		{ // All the same base
 			nexus.Alignment([]string{
@@ -178,6 +183,7 @@ func TestProcessUce(t *testing.T) {
 					3.0 / 3.0,
 				},
 			},
+			false,
 		},
 		{ // More than one possible window
 			nexus.Alignment([]string{
@@ -214,10 +220,11 @@ func TestProcessUce(t *testing.T) {
 					3.0 / 3.0,
 				},
 			},
+			false,
 		},
 	}
 	for _, tc := range tt {
-		gotWins, gotVals := uce.ProcessUce(tc.aln, tc.metrics, tc.minWin, tc.chars)
+		gotWins, gotVals := uce.ProcessUce(tc.aln, tc.metrics, tc.minWin, tc.chars, tc.largeCore)
 		t.Run("Windows", func(t *testing.T) {
 			for m, got := range gotWins {
 				exp := tc.expWins[m]

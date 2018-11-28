@@ -68,8 +68,8 @@ func setup() {
 		ui.Errorf("Config file expected to end in .cfg, got %s\n", path.Ext(*cfg))
 	case *minWin < 0:
 		ui.Errorf("Window size must be positive, got %d\n", *minWin)
-	case !(*entropy || *gc):
-		ui.Errorf("At least one metric is required\n")
+	case *entropy == *gc && (*entropy || *gc):
+		ui.Errorf("Only one metric is allowed\n")
 	default:
 	}
 

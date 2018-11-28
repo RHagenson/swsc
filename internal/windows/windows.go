@@ -32,7 +32,7 @@ func (w *Window) Stop() int {
 }
 
 func GetAll(uceAln nexus.Alignment, minWin int) []Window {
-	windows, _ := GenerateWindows(uceAln.Len(), minWin)
+	windows := GenerateWindows(uceAln.Len(), minWin)
 	return windows
 }
 
@@ -110,10 +110,7 @@ func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, in
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
-func GenerateWindows(length, min int) ([]Window, error) {
-	if err := utils.ValidateMinWin(length, min); err != nil {
-		return nil, err
-	}
+func GenerateWindows(length, min int) []Window {
 	n := (length - min*3) + 1            // Make range inclusive
 	windows := make([]Window, n*(n+1)/2) // Length is sum of all numbers n and below
 	i := 0
@@ -123,7 +120,7 @@ func GenerateWindows(length, min int) ([]Window, error) {
 			i++
 		}
 	}
-	return windows, nil
+	return windows
 }
 
 func getMinVarWindow(windows []Window, alnLength int) Window {

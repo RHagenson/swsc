@@ -31,7 +31,7 @@ func TestGenerateWindows(t *testing.T) {
 		{5786, 100, 15056328},
 	}
 	for _, tc := range tt {
-		got, _ := windows.GenerateWindows(tc.length, tc.minWin)
+		got := windows.GenerateWindows(tc.length, tc.minWin)
 		if len(got) != tc.expected {
 			t.Errorf("Given len:%d, win:%d, expected %d, got %d\n",
 				tc.length, tc.minWin, tc.expected, len(got))
@@ -123,7 +123,7 @@ func TestGetAll(t *testing.T) {
 
 	for _, tc := range tt {
 		got := windows.GetAll(tc.aln, tc.minWin)
-		exp, _ := windows.GenerateWindows(tc.aln.Len(), 2)
+		exp := windows.GenerateWindows(tc.aln.Len(), 2)
 		t.Run("Length", func(t *testing.T) {
 			if len(got) != len(exp) {
 				t.Errorf("Got %d, Expected %d", len(got), len(exp))

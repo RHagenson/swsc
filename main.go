@@ -45,7 +45,7 @@ var (
 var (
 	pfinderFile = new(os.File)
 	datasetName = ""
-	mets        = make([]metrics.Metric, 0)
+	mets        = make([]metrics.Metric, 0, 3)
 )
 
 func setup() {

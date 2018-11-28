@@ -44,8 +44,7 @@ var (
 
 // Global reference vars
 var (
-	datasetName = ""
-	mets        = make([]metrics.Metric, 0, 3)
+	mets = make([]metrics.Metric, 0, 3)
 )
 
 func setup() {
@@ -74,7 +73,6 @@ func setup() {
 	}
 
 	// Set global vars
-	datasetName = strings.TrimRight(path.Base(*read), ".nex")
 	if *entropy {
 		mets = append(mets, metrics.Entropy)
 	}
@@ -86,6 +84,7 @@ func setup() {
 func main() {
 	// Parse CLI arguments
 	setup()
+	datasetName := strings.TrimRight(path.Base(*read), ".nex")
 
 	// Inform user on STDOUT what is being done
 	fmt.Println(ui.Header(*read))

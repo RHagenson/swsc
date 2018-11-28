@@ -90,23 +90,21 @@ func main() {
 	// Inform user on STDOUT what is being done
 	fmt.Println(ui.Header(*read))
 
-	// Open input file
 	in, err := os.Open(*read)
 	defer in.Close()
 	if err != nil {
 		ui.Errorf("Could not read input file: %s", err)
 	}
 
-	out, err := os.Create(*write)
-	defer out.Close()
-	if err != nil {
-		ui.Errorf("Could not create output file: %s", err)
+	// Read in the input Nexus file
+	nex := nexus.Read(in)
+
+	// Early panic if minWin has been set too large to create flanks and core of that length
+	if err := utils.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
+		ui.Errorf("Failed due to: %v", err)
 	}
 
-	// Write the header to the output file
-	writers.WriteOutputHeader(out)
-
-	// If PartitionFinder2 config file is desired, write its header/starting block
+	// If PartitionFinder2 config file is desired, write its starting block
 	if *cfg != "" {
 		pfinderFile, err = os.Create(*cfg)
 		if err != nil {
@@ -119,13 +117,13 @@ func main() {
 
 	}
 
-	// Read in the input Nexus file
-	nex := nexus.Read(in)
-
-	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := utils.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
-		ui.Errorf("Failed due to: %v", err)
+	out, err := os.Create(*write)
+	defer out.Close()
+	if err != nil {
+		ui.Errorf("Could not create output file: %s", err)
 	}
+
+	writers.WriteOutputHeader(out)
 
 	var (
 		aln  = nex.Alignment()        // Sequence alignment

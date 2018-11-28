@@ -133,10 +133,10 @@ func main() {
 		bar  = pb.StartNew(len(uces)) // Progress bar
 	)
 
-	// Order UCEs
+	// Sort UCEs
 	// Create reverse lookup to maintain order
-	revUCEs := make(map[int]string)
-	keys := make([]int, 0)
+	revUCEs := make(map[int]string, len(uces))
+	keys := make([]int, 0, len(uces))
 	for name, sites := range uces {
 		var (
 			start = math.MaxInt16 // Minimum position in UCE

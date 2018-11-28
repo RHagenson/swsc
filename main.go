@@ -84,7 +84,6 @@ func setup() {
 func main() {
 	// Parse CLI arguments
 	setup()
-	datasetName := strings.TrimRight(path.Base(*read), ".nex")
 
 	// Inform user on STDOUT what is being done
 	fmt.Println(ui.Header(*read))
@@ -182,7 +181,7 @@ func main() {
 		if err != nil {
 			ui.Errorf("Could not create PartitionFinder2 file: %s", err)
 		}
-		block := pfinder.StartBlock(datasetName)
+		block := pfinder.StartBlock(strings.TrimRight(path.Base(*read), ".nex"))
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write .cfg start block: %s", err)
 		}

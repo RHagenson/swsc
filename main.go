@@ -183,16 +183,16 @@ func main() {
 		}
 		block := pfinder.StartBlock(strings.TrimRight(path.Base(*read), ".nex"))
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
-			ui.Errorf("Failed to write .cfg start block: %s", err)
+			ui.Errorf("Failed to write PartitionFinder2 start block: %s", err)
 		}
 		for _, b := range pFinderConfigBlocks {
 			if _, err := io.WriteString(pfinderFile, b); err != nil {
-				ui.Errorf("Failed to write .cfg config block: %s", err)
+				ui.Errorf("Failed to write PartitionFinder2 config block: %s", err)
 			}
 		}
 		block = pfinder.EndBlock()
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
-			ui.Errorf("Failed to write .cfg end block: %s", err)
+			ui.Errorf("Failed to write PartitionFinder2 end block: %s", err)
 		}
 	}
 

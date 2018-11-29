@@ -130,7 +130,6 @@ func GenerateWindows(length, min int) []Window {
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
-// TODO: When length % min != 0, must produce candidates from the end as well
 func GenerateCandidates(length, min int) []Window {
 	nNonOverlapping := length / min
 	var wins []Window

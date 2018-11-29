@@ -30,8 +30,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{2, 4},
+				metrics.GC:      windows.Window{2, 4},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -63,8 +63,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{2, 4},
+				metrics.GC:      windows.Window{2, 4},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -96,8 +96,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{2, 4},
+				metrics.GC:      windows.Window{2, 4},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -129,8 +129,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{2, 4},
+				metrics.GC:      windows.Window{2, 4},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -162,8 +162,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{2, 4},
+				metrics.GC:      windows.Window{2, 4},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -195,8 +195,8 @@ func TestProcessUce(t *testing.T) {
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
-				metrics.Entropy: windows.Window{2, 5},
-				metrics.GC:      windows.Window{2, 5},
+				metrics.Entropy: windows.Window{3, 5},
+				metrics.GC:      windows.Window{3, 5},
 			},
 			map[metrics.Metric][]float64{
 				metrics.Entropy: []float64{
@@ -236,7 +236,7 @@ func TestProcessUce(t *testing.T) {
 		t.Run("Values", func(t *testing.T) {
 			for m, got := range gotVals {
 				exp := tc.expVals[m]
-				if !floats.EqualApprox(got, exp, 1e-15) {
+				if !floats.EqualApprox(got, exp, 1e-10) {
 					t.Errorf("\nGot:\n%v\nExpected:\n%v\nFor:\n%v", got, exp, tc.aln)
 				}
 			}

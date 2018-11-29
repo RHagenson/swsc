@@ -14,10 +14,7 @@ func ProcessUce(uceAln nexus.Alignment, mets []metrics.Metric, minWin int, chars
 		metricBestWindow = make(map[metrics.Metric]windows.Window, len(mets))
 		metricBestVals   = make(map[metrics.Metric][]float64, len(mets))
 	)
-
-	wins := windows.GetAll(uceAln, minWin)
 	inVarSites := invariants.InvariantSites(uceAln, chars)
-
 	for _, m := range mets {
 		switch m {
 		case metrics.Entropy:
@@ -28,12 +25,19 @@ func ProcessUce(uceAln nexus.Alignment, mets []metrics.Metric, minWin int, chars
 			// 	metricBestVals["multi"] = sitewiseMulti(uceAln)
 		}
 	}
-	if len(wins) > 1 {
-		metricBestWindow = windows.GetBest(metricBestVals, wins, uceAln.Len(), inVarSites, largeCore)
-	} else {
-		for _, k := range mets {
-			metricBestWindow[k] = wins[0]
-		}
+
+	// Heuristic: Get nonoverlapping candidate windows
+	canWins := windows.GenerateCandidates(uceAln.Len(), minWin)
+
+	// Determine the best candidate window
+	bestCanWins := windows.GetBest(metricBestVals, canWins, uceAln.Len(), inVarSites, largeCore)
+
+	// Extend the best candidate and retest
+	for _, w := range bestCanWins {
+		canWins = windows.ExtendCandidate(w, uceAln.Len(), minWin)
 	}
+
+	metricBestWindow = windows.GetBest(metricBestVals, canWins, uceAln.Len(), inVarSites, largeCore)
+
 	return metricBestWindow, metricBestVals
 }

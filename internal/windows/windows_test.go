@@ -39,6 +39,40 @@ func TestGenerateWindows(t *testing.T) {
 	}
 }
 
+func TestGenerateCandidates(t *testing.T) {
+	tt := []struct {
+		length   int
+		minWin   int
+		expected int
+	}{
+		{300, 50, 7},
+
+		{320, 100, 2},
+		{321, 100, 2},
+		{322, 100, 2},
+		{323, 100, 2},
+		{324, 100, 2},
+		{325, 100, 2},
+
+		{325, 101, 2},
+		{325, 102, 2},
+		{325, 103, 2},
+		{325, 104, 2},
+		{325, 105, 2},
+
+		{5786, 50, 452},
+		{5786, 100, 220},
+	}
+	for _, tc := range tt {
+		got := windows.GenerateCandidates(tc.length, tc.minWin)
+		if len(got) != tc.expected {
+			t.Errorf("Given len:%d, win:%d, expected %d, got %d\n",
+				tc.length, tc.minWin, tc.expected, len(got),
+			)
+		}
+	}
+}
+
 func TestWindow(t *testing.T) {
 	tt := []struct {
 		win windows.Window

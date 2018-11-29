@@ -123,6 +123,35 @@ func GenerateWindows(length, min int) []Window {
 	return windows
 }
 
+// GenerateCandidates produces candidate windows of minimum size
+// spanning the total length with a minimum/2 overlap
+// Windows must be:
+//   1) at least minimum window from the start of the UCE (ie, first start at minimum+1)
+//   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
+//   3) at least minimum window in length (ie, window{start, end)})
+// Input is treated inclusively, but returned with exclusive stop indexes
+// TODO: When length % min != 0, must produce candidates from the end as well
+func GenerateCandidates(length, min int) []Window {
+	nNonOverlapping := length / min
+	var wins []Window
+
+	mod := length % min
+
+	if mod == 0 { // Only need to produce forward series
+		wins = make([]Window, 0, nNonOverlapping+1)
+		for start := min; start+min+min <= length; start += min / 2 {
+			wins = append(wins, Window{start, start + min})
+		}
+	} else { // Need to produce forward and reverse series (revese series is forward+mod)
+		wins = make([]Window, 0, (nNonOverlapping+1)*2)
+		for start := min; start+min+min <= length; start += min / 2 {
+			wins = append(wins, Window{start, start + min}, Window{start + mod, start + min + mod})
+		}
+	}
+
+	return wins
+}
+
 func getMinVarWindow(windows []Window, alnLength int) Window {
 	best := math.MaxFloat64
 	var bestWindow Window

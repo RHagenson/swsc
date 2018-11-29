@@ -167,14 +167,16 @@ func ExtendCandidate(w Window, length, minWin int) []Window {
 }
 
 func getMinVarWindow(windows []Window, alnLength int) Window {
-	best := math.MaxFloat64
-	var bestWindow Window
-
+	var (
+		best                        = math.MaxFloat64
+		bestWindow                  Window
+		left, core, right, variance float64
+	)
 	for _, w := range windows {
-		left := float64(w.Start())
-		core := float64(w.Stop() - w.Start())
-		right := float64(alnLength - w.Stop())
-		variance := stat.Variance([]float64{left, core, right}, nil)
+		left = float64(w.Start())
+		core = float64(w.Stop() - w.Start())
+		right = float64(alnLength - w.Stop())
+		variance = stat.Variance([]float64{left, core, right}, nil)
 		if variance < best {
 			best = variance
 			bestWindow = w

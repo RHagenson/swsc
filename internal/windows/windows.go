@@ -129,20 +129,23 @@ func GenerateWindows(length, min int) []Window {
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
 func GenerateCandidates(length, min int) []Window {
-	nNonOverlapping := length / min
+	fwdWins := (length - min - min) / min
 	var wins []Window
 
 	mod := length % min
 
 	if mod == 0 { // Only need to produce forward series
-		wins = make([]Window, 0, nNonOverlapping+1)
-		for start := min; start+min+min <= length; start += min / 2 {
-			wins = append(wins, Window{start, start + min})
+		wins = make([]Window, fwdWins)
+		for i := range wins {
+			start := min * (i + 1)
+			wins[i] = Window{start, start + min}
 		}
 	} else { // Need to produce forward and reverse series (revese series is forward+mod)
-		wins = make([]Window, 0, (nNonOverlapping+1)*2)
-		for start := min; start+min+min <= length; start += min / 2 {
-			wins = append(wins, Window{start, start + min}, Window{start + mod, start + min + mod})
+		wins = make([]Window, (fwdWins)*2)
+		for i := 0; i < len(wins); i += 2 {
+			start := min * (i + 1)
+			wins[i] = Window{start, start + min}
+			wins[len(wins)-1-i] = Window{start + mod, start + min + mod}
 		}
 	}
 

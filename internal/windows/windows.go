@@ -72,26 +72,24 @@ func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, in
 	}
 
 	absMinWindow := make(map[metrics.Metric]Window)
-	for m := range minMetricWindows {
+	for m, wins := range minMetricWindows {
 		/*
 			Sort windows before calculating window variances
 			Must be done or the random order means equal sized windows are equivalent
-			TODO: Devise a better method to resolve ties. This way an earlier window is preferred.
 		*/
-		wins := minMetricWindows[m]
-		sort.SliceStable(wins[:], func(i, j int) bool {
+		sort.SliceStable(wins, func(i, j int) bool {
 			// Lowest Start first
 			return wins[i].Start() < wins[j].Start()
 		})
 		if largeCore {
-			sort.SliceStable(wins[:], func(i, j int) bool {
-				// Smallest window first
+			sort.SliceStable(wins, func(i, j int) bool {
+				// Largest window first
 				wini := wins[i].Stop() - wins[i].Start()
 				winj := wins[j].Stop() - wins[j].Start()
 				return wini > winj
 			})
 		} else {
-			sort.SliceStable(wins[:], func(i, j int) bool {
+			sort.SliceStable(wins, func(i, j int) bool {
 				// Smallest window first
 				wini := wins[i].Stop() - wins[i].Start()
 				winj := wins[j].Stop() - wins[j].Start()

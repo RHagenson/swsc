@@ -36,6 +36,7 @@ func processSetsBlock(lines []string, nex *Nexus) {
 							block.charSets[charsetName],
 							newPair(start, stop+1), // Make stop exclusive so +1 is not needed throughout codebase
 						)
+
 					} else if matched, err := regexp.MatchString(`[0-9]+`, setVal); matched && err == nil {
 						val, _ := strconv.Atoi(setVal)
 						block.charSets[charsetName] = append(

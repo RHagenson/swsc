@@ -152,6 +152,20 @@ func GenerateCandidates(length, min int) []Window {
 	return wins
 }
 
+func ExtendCandidate(w Window, length, minWin int) []Window {
+	var wins []Window
+	firstStart := int(math.Max(float64(w.Start()-minWin), float64(minWin)))
+	lastEnd := int(math.Min(float64(w.Stop()+minWin), float64(length-minWin)))
+
+	for start := firstStart; start <= lastEnd-minWin; start++ {
+		for end := start + minWin; end <= lastEnd; end++ {
+			wins = append(wins, Window{start, end})
+		}
+	}
+
+	return wins
+}
+
 func getMinVarWindow(windows []Window, alnLength int) Window {
 	best := math.MaxFloat64
 	var bestWindow Window

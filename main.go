@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"bitbucket.org/rhagenson/swsc/internal/invariants"
 	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/pfinder"
@@ -111,10 +112,22 @@ func main() {
 	writers.WriteOutputHeader(out)
 
 	var (
-		aln  = nex.Alignment()        // Sequence alignment
-		uces = nex.Charsets()         // UCE set
-		bar  = pb.StartNew(len(uces)) // Progress bar
+		aln        = nex.Alignment()        // Sequence alignment
+		uces       = nex.Charsets()         // UCE set
+		bar        = pb.StartNew(len(uces)) // Progress bar
+		inVarSites = invariants.InvariantSites(aln, nex.Letters())
+		metVals    = make(map[metrics.Metric][]float64, 3)
 	)
+	for _, m := range mets {
+		switch m {
+		case metrics.Entropy:
+			metVals[metrics.Entropy] = metrics.SitewiseEntropy(aln, nex.Letters())
+		case metrics.GC:
+			metVals[metrics.GC] = metrics.SitewiseGc(aln)
+			// case "multi":
+			// 	metVals["multi"] = sitewiseMulti(uceAln)
+		}
+	}
 
 	// Sort UCEs
 	// Create reverse lookup to maintain order
@@ -155,7 +168,7 @@ func main() {
 		}
 
 		uceAln := aln.Subseq(start, stop)
-		bestWindows, metricArray := uce.ProcessUce(uceAln, mets, *minWin, nex.Letters(), *largeCore)
+		bestWindows := uce.ProcessUce(uceAln, inVarSites, metVals, *minWin, nex.Letters(), *largeCore)
 
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {
@@ -170,7 +183,7 @@ func main() {
 		for i := range alnSites {
 			alnSites[i] = i + start
 		}
-		writers.WriteOutput(out, bestWindows, metricArray, alnSites, name)
+		writers.WriteOutput(out, bestWindows, metVals, alnSites, name)
 		bar.Increment()
 	}
 	bar.FinishPrint("Finished processing UCEs")

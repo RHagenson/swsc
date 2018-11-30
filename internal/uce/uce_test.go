@@ -7,17 +7,15 @@ import (
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/uce"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
-	"gonum.org/v1/gonum/floats"
 )
 
 func TestProcessUce(t *testing.T) {
 	tt := []struct {
 		aln       nexus.Alignment
-		metrics   []metrics.Metric
 		minWin    int
 		chars     []byte
 		expWins   map[metrics.Metric]windows.Window
-		expVals   map[metrics.Metric][]float64
+		metVals   map[metrics.Metric][]float64
 		largeCore bool
 	}{
 		{ // All the same seq
@@ -26,7 +24,6 @@ func TestProcessUce(t *testing.T) {
 				"ATGCAT",
 				"ATGCAT",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -59,7 +56,6 @@ func TestProcessUce(t *testing.T) {
 				"ATGCAT",
 				"TACGTA",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -92,7 +88,6 @@ func TestProcessUce(t *testing.T) {
 				"TGCTGA",
 				"GCTACC",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -125,7 +120,6 @@ func TestProcessUce(t *testing.T) {
 				"TTTTTT",
 				"GGGGGG",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -158,7 +152,6 @@ func TestProcessUce(t *testing.T) {
 				"CCCCCC",
 				"CCCCCC",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -191,7 +184,6 @@ func TestProcessUce(t *testing.T) {
 				"CCCCCCCC",
 				"CCCCCCCC",
 			}),
-			[]metrics.Metric{metrics.Entropy, metrics.GC},
 			2,
 			[]byte("ATGC"),
 			map[metrics.Metric]windows.Window{
@@ -224,19 +216,12 @@ func TestProcessUce(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		gotWins, gotVals := uce.ProcessUce(tc.aln, tc.metrics, tc.minWin, tc.chars, tc.largeCore)
+		inVars := make([]bool, tc.aln.Len())
+		gotWins := uce.ProcessUce(0, tc.aln.Len(), inVars, tc.metVals, tc.minWin, tc.chars, tc.largeCore)
 		t.Run("Windows", func(t *testing.T) {
 			for m, got := range gotWins {
 				exp := tc.expWins[m]
 				if got != exp {
-					t.Errorf("\nGot:\n%v\nExpected:\n%v\nFor:\n%v", got, exp, tc.aln)
-				}
-			}
-		})
-		t.Run("Values", func(t *testing.T) {
-			for m, got := range gotVals {
-				exp := tc.expVals[m]
-				if !floats.EqualApprox(got, exp, 1e-10) {
 					t.Errorf("\nGot:\n%v\nExpected:\n%v\nFor:\n%v", got, exp, tc.aln)
 				}
 			}

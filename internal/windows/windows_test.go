@@ -68,7 +68,8 @@ func TestGenerateCandidates(t *testing.T) {
 
 		{0, 5786, 50, 226},
 		{0, 5786, 100, 110},
-		{1, 376, 50, 110},
+
+		{1, 376, 50, 10},
 	}
 	for _, tc := range tt {
 		got := windows.GenerateCandidates(tc.start, tc.stop, tc.minWin)

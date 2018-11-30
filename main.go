@@ -167,8 +167,10 @@ func main() {
 			}
 		}
 
-		uceAln := aln.Subseq(start, stop)
-		bestWindows := uce.ProcessUce(uceAln, inVarSites, metVals, *minWin, nex.Letters(), *largeCore)
+		// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
+		// It should be the case that processing a UCE considers where the start and stop of the UCE are
+		// finding the best Window within that range
+		bestWindows := uce.ProcessUce(start, stop, inVarSites, metVals, *minWin, nex.Letters(), *largeCore)
 
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {

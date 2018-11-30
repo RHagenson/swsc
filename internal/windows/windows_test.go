@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 )
 
@@ -41,33 +40,41 @@ func TestGenerateWindows(t *testing.T) {
 
 func TestGenerateCandidates(t *testing.T) {
 	tt := []struct {
-		length   int
+		start    int
+		stop     int
 		minWin   int
 		expected int
 	}{
-		{300, 50, 4}, // [[50, 100], [100, 150], [150, 200], [150, 200]]
+		{0, 300, 50, 4}, // [[50, 100], [100, 150], [150, 200], [150, 200]]
 
-		{320, 100, 2}, // [[100, 200], [120, 220]]
-		{321, 100, 2}, // [[100, 200], [121, 221]]
-		{322, 100, 2}, // [[100, 200], [122, 222]]
-		{323, 100, 2}, // [[100, 200], [123, 221]]
-		{324, 100, 2}, // [[100, 200], [124, 224]]
-		{325, 100, 2}, // [[100, 200], [125, 225]]
+		{0, 320, 100, 2}, // [[100, 200], [120, 220]]
+		{0, 321, 100, 2}, // [[100, 200], [121, 221]]
+		{0, 322, 100, 2}, // [[100, 200], [122, 222]]
+		{0, 323, 100, 2}, // [[100, 200], [123, 221]]
+		{0, 324, 100, 2}, // [[100, 200], [124, 224]]
+		{0, 325, 100, 2}, // [[100, 200], [125, 225]]
 
-		{325, 101, 2},
-		{325, 102, 2},
-		{325, 103, 2},
-		{325, 104, 2},
-		{325, 105, 2},
+		{0, 325, 101, 2},
+		{0, 325, 102, 2},
+		{0, 325, 103, 2},
+		{0, 325, 104, 2},
+		{0, 325, 105, 2},
 
-		{5786, 50, 226},
-		{5786, 100, 110},
+		{1, 325, 101, 2},
+		{1, 325, 102, 2},
+		{1, 325, 103, 2},
+		{1, 325, 104, 2},
+		{1, 325, 105, 2},
+
+		{0, 5786, 50, 226},
+		{0, 5786, 100, 110},
+		{1, 376, 50, 110},
 	}
 	for _, tc := range tt {
-		got := windows.GenerateCandidates(tc.length, tc.minWin)
+		got := windows.GenerateCandidates(tc.start, tc.stop, tc.minWin)
 		if len(got) != tc.expected {
-			t.Errorf("Given len:%d, win:%d, expected %d, got %d\n",
-				tc.length, tc.minWin, tc.expected, len(got),
+			t.Errorf("Given start:%d, stop:%d, min: %d expected %d, got %d, got %v\n",
+				tc.start, tc.stop, tc.minWin, tc.expected, len(got), got,
 			)
 		}
 	}
@@ -135,78 +142,6 @@ func TestWindow(t *testing.T) {
 				t.Errorf("Got: %d, Expected %d", tc.win.Start(), tc.win[0])
 			}
 		})
-	}
-}
-
-func TestGetAll(t *testing.T) {
-	tt := []struct {
-		aln    nexus.Alignment
-		minWin int
-	}{
-		{ // All the same seq
-			nexus.Alignment([]string{
-				"ATGCAT",
-				"ATGCAT",
-				"ATGCAT",
-			}),
-			2,
-		},
-		{ // One seq reversed
-			nexus.Alignment([]string{
-				"ATGCAT",
-				"ATGCAT",
-				"TACGTA",
-			}),
-			2,
-		},
-		{ // No positional matches
-			nexus.Alignment([]string{
-				"ATGCAT",
-				"TGCTGA",
-				"GCTACC",
-			}),
-			2,
-		},
-		{ // Not all bases present
-			nexus.Alignment([]string{
-				"CCCCCC",
-				"TTTTTT",
-				"GGGGGG",
-			}),
-			2,
-		},
-		{ // All the same base
-			nexus.Alignment([]string{
-				"CCCCCC",
-				"CCCCCC",
-				"CCCCCC",
-			}),
-			2,
-		},
-		{ // More than one possible window
-			nexus.Alignment([]string{
-				"CCCCCCCC",
-				"CCCCCCCC",
-				"CCCCCCCC",
-			}),
-			2,
-		},
-	}
-
-	for _, tc := range tt {
-		got := windows.GetAll(tc.aln, tc.minWin)
-		exp := windows.GenerateWindows(tc.aln.Len(), 2)
-		t.Run("Length", func(t *testing.T) {
-			if len(got) != len(exp) {
-				t.Errorf("Got %d, Expected %d", len(got), len(exp))
-			}
-		})
-
-		for i := range got {
-			if got[i] != exp[i] {
-				t.Errorf("Got %v, Expected %v", got[i], exp[i])
-			}
-		}
 	}
 }
 

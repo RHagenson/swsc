@@ -31,12 +31,7 @@ func (w *Window) Stop() int {
 	return w[1]
 }
 
-func GetAll(uceAln nexus.Alignment, minWin int) []Window {
-	windows := GenerateWindows(uceAln.Len(), minWin)
-	return windows
-}
-
-func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
+func GetBest(mets map[metrics.Metric][]float64, wins []Window, alnLen int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
@@ -45,7 +40,7 @@ func GetBest(mets map[metrics.Metric][]float64, windows []Window, alnLen int, in
 	sses := make(map[metrics.Metric]map[Window]float64)
 
 	// 2) Get SSE for each cell in array
-	for _, win := range windows {
+	for _, win := range wins {
 		// Get SSEs for a given Window
 		for m, v := range getSses(mets, win, inVarSites) {
 			if _, ok := sses[m]; !ok {
@@ -128,34 +123,34 @@ func GenerateWindows(length, min int) []Window {
 //   2) at least minimum window from the end of the UCE (ie, last end at length-minimum+1)
 //   3) at least minimum window in length (ie, window{start, end)})
 // Input is treated inclusively, but returned with exclusive stop indexes
-func GenerateCandidates(length, min int) []Window {
-	fwdWins := (length - min - min) / min
+func GenerateCandidates(start, stop, min int) []Window {
+	fwdWins := (stop - start - min - min) / min
 	var wins []Window
 
-	mod := length % min
+	mod := (stop - start) % min
 
 	if mod == 0 { // Only need to produce forward series
 		wins = make([]Window, fwdWins)
 		for i := range wins {
-			start := min * (i + 1)
-			wins[i] = Window{start, start + min}
+			offset := min * (i + 1)
+			wins[i] = Window{start + offset, start + offset + min - 1}
 		}
 	} else { // Need to produce forward and reverse series (revese series is forward+mod)
 		wins = make([]Window, (fwdWins)*2)
-		for i := 0; i < len(wins); i += 2 {
-			start := min * (i + 1)
-			wins[i] = Window{start, start + min}
-			wins[len(wins)-1-i] = Window{start + mod, start + min + mod}
+		for i := 0; i < len(wins)/2; i++ {
+			offset := min * (i + 1)
+			wins[i] = Window{start + offset, start + offset + min - 1}
+			wins[len(wins)/2+i] = Window{start + offset + mod, start + offset + min + mod - 1}
 		}
 	}
 
 	return wins
 }
 
-func ExtendCandidate(w Window, length, minWin int) []Window {
+func ExtendCandidate(w Window, start, stop, minWin int) []Window {
 	var wins []Window
-	firstStart := int(math.Max(float64(w.Start()-minWin), float64(minWin)))
-	lastEnd := int(math.Min(float64(w.Stop()+minWin), float64(length-minWin)))
+	firstStart := int(math.Max(float64(w.Start()-minWin), float64(start+minWin)))
+	lastEnd := int(math.Min(float64(w.Stop()+minWin), float64(stop-minWin)))
 
 	for start := firstStart; start <= lastEnd-minWin; start++ {
 		for end := start + minWin; end <= lastEnd; end++ {

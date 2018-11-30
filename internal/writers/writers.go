@@ -42,7 +42,7 @@ func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, met
 	mNum := 0
 	for m, v := range metricArray {
 		window := bestWindows[m]
-		for i := range v {
+		for i := range alnSites {
 			d[mNum+i] = []string{
 				name,                                  // 1) UCE name
 				strconv.Itoa(uceSites[i]),             // 2) UCE site position relative to center of alignment

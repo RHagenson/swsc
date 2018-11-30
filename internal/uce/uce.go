@@ -23,7 +23,7 @@ func ProcessUce(start, stop int, inVars []bool, mets map[metrics.Metric][]float6
 		canWins = windows.ExtendCandidate(w, start, stop, minWin)
 	}
 
-	metricBestWindow = windows.GetBest(mets, canWins, stop-start, inVars, largeCore)
+	metricBestWindow = windows.GetBest(mets, canWins, stop, inVars, largeCore)
 
 	return metricBestWindow
 }

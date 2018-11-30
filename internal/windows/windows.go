@@ -31,7 +31,7 @@ func (w *Window) Stop() int {
 	return w[1]
 }
 
-func GetBest(mets map[metrics.Metric][]float64, wins []Window, alnLen int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
+func GetBest(mets map[metrics.Metric][]float64, wins []Window, stop int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
@@ -91,7 +91,7 @@ func GetBest(mets map[metrics.Metric][]float64, wins []Window, alnLen int, inVar
 				return wini < winj
 			})
 		}
-		absMinWindow[m] = getMinVarWindow(wins, alnLen)
+		absMinWindow[m] = getMinVarWindow(wins, stop)
 	}
 
 	return absMinWindow
@@ -161,7 +161,7 @@ func ExtendCandidate(w Window, start, stop, minWin int) []Window {
 	return wins
 }
 
-func getMinVarWindow(windows []Window, alnLength int) Window {
+func getMinVarWindow(windows []Window, stop int) Window {
 	var (
 		best                        = math.MaxFloat64
 		bestWindow                  Window
@@ -170,7 +170,7 @@ func getMinVarWindow(windows []Window, alnLength int) Window {
 	for _, w := range windows {
 		left = float64(w.Start())
 		core = float64(w.Stop() - w.Start())
-		right = float64(alnLength - w.Stop())
+		right = float64(stop - w.Stop())
 		variance = stat.Variance([]float64{left, core, right}, nil)
 		if variance < best {
 			best = variance

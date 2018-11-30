@@ -83,36 +83,37 @@ func TestGenerateCandidates(t *testing.T) {
 func TestExtendCandidate(t *testing.T) {
 	tt := []struct {
 		win      windows.Window
-		length   int
+		start    int
+		stop     int
 		minWin   int
 		expected int
 	}{
-		{windows.Window{100, 200}, 301, 100, 3},
-		{windows.Window{100, 200}, 302, 100, 6},
-		{windows.Window{100, 200}, 303, 100, 10},
+		{windows.Window{100, 200}, 0, 301, 100, 3},
+		{windows.Window{100, 200}, 0, 302, 100, 6},
+		{windows.Window{100, 200}, 0, 303, 100, 10},
 
-		{windows.Window{50, 100}, 300, 50, 1326},
+		{windows.Window{50, 100}, 0, 300, 50, 1326},
 
-		{windows.Window{100, 200}, 321, 100, 253},
-		{windows.Window{100, 200}, 322, 100, 276},
-		{windows.Window{100, 200}, 323, 100, 300},
-		{windows.Window{100, 200}, 324, 100, 325},
-		{windows.Window{100, 200}, 325, 100, 351},
+		{windows.Window{100, 200}, 0, 321, 100, 253},
+		{windows.Window{100, 200}, 0, 322, 100, 276},
+		{windows.Window{100, 200}, 0, 323, 100, 300},
+		{windows.Window{100, 200}, 0, 324, 100, 325},
+		{windows.Window{100, 200}, 0, 325, 100, 351},
 
-		{windows.Window{101, 202}, 325, 101, 276},
-		{windows.Window{102, 204}, 325, 102, 210},
-		{windows.Window{103, 206}, 325, 103, 153},
-		{windows.Window{104, 208}, 325, 104, 105},
-		{windows.Window{105, 210}, 325, 105, 66},
+		{windows.Window{101, 202}, 0, 325, 101, 276},
+		{windows.Window{102, 204}, 0, 325, 102, 210},
+		{windows.Window{103, 206}, 0, 325, 103, 153},
+		{windows.Window{104, 208}, 0, 325, 104, 105},
+		{windows.Window{105, 210}, 0, 325, 105, 66},
 
-		{windows.Window{50, 100}, 5786, 50, 1326},
-		{windows.Window{100, 200}, 5786, 100, 5151},
+		{windows.Window{50, 100}, 0, 5786, 50, 1326},
+		{windows.Window{100, 200}, 0, 5786, 100, 5151},
 	}
 	for _, tc := range tt {
-		got := windows.ExtendCandidate(tc.win, tc.length, tc.minWin)
+		got := windows.ExtendCandidate(tc.win, tc.start, tc.stop, tc.minWin)
 		if len(got) != tc.expected {
-			t.Errorf("Given len:%d, win:%d, expected %d, got %d\n",
-				tc.length, tc.minWin, tc.expected, len(got),
+			t.Errorf("Given win:%v, start: %d, stop: %d, min: %d, expected %d, got %d\n",
+				tc.win, tc.start, tc.stop, tc.minWin, tc.expected, len(got),
 			)
 		}
 	}

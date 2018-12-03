@@ -2,13 +2,13 @@
 
 `swsc` implements the Sliding-Window Site Characteristics (SWSC) method as described in <https://doi.org/10.1093/molbev/msy069>
 
-Initial write was based on [PFinderUCE-SWSC-EN]
+Sample data taken from: [PFinderUCE-SWSC-EN]
 
 [PFinderUCE-SWSC-EN]: https://github.com/Tagliacollo/PFinderUCE-SWSC-EN
 
 ## Insight into Interworkings
 
-If using this program as blockbox, here are a few things to consider about the interworkings:
+If using this program as blackbox, here are a few things to consider about the interworkings:
 
 ### swsc Window Types
 

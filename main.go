@@ -42,11 +42,6 @@ var (
 	// multi = pflag.Bool("multi", false, "Calculate multinomial distribution metric")
 )
 
-// Global reference vars
-var (
-	mets = make([]metrics.Metric, 0, 3)
-)
-
 func setup() {
 	pflag.Parse()
 	if *help {
@@ -69,17 +64,10 @@ func setup() {
 		ui.Errorf("Window size must be positive, got %d\n", *minWin)
 	case *entropy == *gc && (*entropy || *gc):
 		ui.Errorf("Only one metric is allowed\n")
-	default:
+	case !(*entropy || *gc):
+		ui.Errorf("At least one metric is needed\n")
 	}
-
-	// Set global vars
-	if *entropy {
-		mets = append(mets, metrics.Entropy)
 	}
-	if *gc {
-		mets = append(mets, metrics.GC)
-	}
-}
 
 func main() {
 	// Parse CLI arguments
@@ -116,15 +104,12 @@ func main() {
 		bar     = pb.StartNew(len(uces)) // Progress bar
 		metVals = make(map[metrics.Metric][]float64, 3)
 	)
-	for _, m := range mets {
-		switch m {
-		case metrics.Entropy:
+
+	if *entropy {
 			metVals[metrics.Entropy] = metrics.SitewiseEntropy(aln, nex.Letters())
-		case metrics.GC:
+	}
+	if *gc {
 			metVals[metrics.GC] = metrics.SitewiseGc(aln)
-			// case "multi":
-			// 	metVals["multi"] = sitewiseMulti(uceAln)
-		}
 	}
 
 	// Sort UCEs

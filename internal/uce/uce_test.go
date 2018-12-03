@@ -216,8 +216,7 @@ func TestProcessUce(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		inVars := make([]bool, tc.aln.Len())
-		gotWins := uce.ProcessUce(0, tc.aln.Len(), inVars, tc.metVals, tc.minWin, tc.chars, tc.largeCore)
+		gotWins := uce.ProcessUce(0, tc.aln.Len(), tc.metVals, tc.minWin, tc.chars, tc.largeCore)
 		t.Run("Windows", func(t *testing.T) {
 			for m, got := range gotWins {
 				exp := tc.expWins[m]

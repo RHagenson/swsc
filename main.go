@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	"bitbucket.org/rhagenson/swsc/internal/invariants"
 	"bitbucket.org/rhagenson/swsc/internal/metrics"
 	"bitbucket.org/rhagenson/swsc/internal/nexus"
 	"bitbucket.org/rhagenson/swsc/internal/pfinder"
@@ -112,11 +111,10 @@ func main() {
 	writers.WriteOutputHeader(out)
 
 	var (
-		aln        = nex.Alignment()        // Sequence alignment
-		uces       = nex.Charsets()         // UCE set
-		bar        = pb.StartNew(len(uces)) // Progress bar
-		inVarSites = invariants.InvariantSites(aln, nex.Letters())
-		metVals    = make(map[metrics.Metric][]float64, 3)
+		aln     = nex.Alignment()        // Sequence alignment
+		uces    = nex.Charsets()         // UCE set
+		bar     = pb.StartNew(len(uces)) // Progress bar
+		metVals = make(map[metrics.Metric][]float64, 3)
 	)
 	for _, m := range mets {
 		switch m {
@@ -170,8 +168,7 @@ func main() {
 		// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
 		// It should be the case that processing a UCE considers where the start and stop of the UCE are
 		// finding the best Window within that range
-		bestWindows := uce.ProcessUce(start, stop, inVarSites, metVals, *minWin, nex.Letters(), *largeCore)
-
+		bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore)
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {
 				block := pfinder.ConfigBlock(

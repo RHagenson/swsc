@@ -31,7 +31,7 @@ func (w *Window) Stop() int {
 	return w[1]
 }
 
-func GetBest(mets map[metrics.Metric][]float64, wins []Window, stop int, inVarSites []bool, largeCore bool) map[metrics.Metric]Window {
+func GetBest(mets map[metrics.Metric][]float64, wins []Window, stop int, largeCore bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
 	// columns = number of windows
@@ -42,7 +42,7 @@ func GetBest(mets map[metrics.Metric][]float64, wins []Window, stop int, inVarSi
 	// 2) Get SSE for each cell in array
 	for _, win := range wins {
 		// Get SSEs for a given Window
-		for m, v := range getSses(mets, win, inVarSites) {
+		for m, v := range getSses(mets, win) {
 			if _, ok := sses[m]; !ok {
 				sses[m] = make(map[Window]float64, 1)
 				sses[m][win] = v

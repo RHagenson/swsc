@@ -32,10 +32,10 @@ func ConfigBlock(name string, bestWindow [2]int, start, stop int, fullRange bool
 	} else {
 		// left UCE
 		leftStart := start
-		leftEnd := start + bestWindow[0]
+		leftEnd := bestWindow[0] - 1
 		// core UCE
-		coreStart := leftEnd + 1
-		coreEnd := start + bestWindow[1]
+		coreStart := bestWindow[0]
+		coreEnd := bestWindow[1]
 		// right UCE
 		rightStart := coreEnd + 1
 		rightEnd := stop

@@ -28,8 +28,8 @@ func WriteOutputHeader(f io.Writer) {
 	return
 }
 
-// WriteOutput appends partitioning data to output
-func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, metricArray map[metrics.Metric][]float64, alnSites []int, name string) {
+// Output prepares a single UCEs output
+func Output(bestWindows map[metrics.Metric]windows.Window, metricArray map[metrics.Metric][]float64, alnSites []int, name string) [][]string {
 	d := make([][]string, len(metricArray)*len(alnSites))
 	N := len(alnSites)
 	middle := int(math.Ceil(float64(N) / 2.0))
@@ -38,7 +38,6 @@ func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, met
 		uceSites[i] = i - middle
 	}
 
-	file := csv.NewWriter(f)
 	mNum := 0
 	for m, v := range metricArray {
 		window := bestWindows[m]
@@ -56,9 +55,7 @@ func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, met
 		}
 		mNum++
 	}
-	if err := file.WriteAll(d); err != nil {
-		ui.Errorf("Problem writing to output: %s", err)
-	}
+	return d
 }
 
 // relToWindow is a codified function for use in later tools of whether the current alignment position

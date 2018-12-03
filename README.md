@@ -71,3 +71,4 @@ Savvy Git users will note there are multiple version on this repo. A quick expla
 + `v2.0.0`: Uses candidate windows plus extension procedure (optimize large alignment performance)
 + `v3.0.0`: Candidate windows plus extension while using a single reference alignment (better performance)
 + `v4.0.0`: Candidate windows plus extension, single reference alignment, and remove redundant calculations
++ `v5.0.0`: Multiple candidate windows plus extension and single reference alignment

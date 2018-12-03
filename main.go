@@ -67,7 +67,7 @@ func setup() {
 	case !(*entropy || *gc):
 		ui.Errorf("At least one metric is needed\n")
 	}
-	}
+}
 
 func main() {
 	// Parse CLI arguments
@@ -106,10 +106,10 @@ func main() {
 	)
 
 	if *entropy {
-			metVals[metrics.Entropy] = metrics.SitewiseEntropy(aln, nex.Letters())
+		metVals[metrics.Entropy] = metrics.SitewiseEntropy(aln, nex.Letters())
 	}
 	if *gc {
-			metVals[metrics.GC] = metrics.SitewiseGc(aln)
+		metVals[metrics.GC] = metrics.SitewiseGc(aln)
 	}
 
 	// Sort UCEs
@@ -157,7 +157,7 @@ func main() {
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {
 				block := pfinder.ConfigBlock(
-					name, bestWindow, start, stop,
+					name, bestWindow, start, stop-1,
 					windows.UseFullRange(bestWindow, aln, nex.Letters()),
 				)
 				pFinderConfigBlocks = append(pFinderConfigBlocks, block)

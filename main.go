@@ -30,9 +30,10 @@ var (
 
 // General use flags
 var (
-	minWin    = pflag.Int("minWin", 50, "Minimum window size")
-	largeCore = pflag.Bool("largeCore", false, "When a small and large core have equivalent metrics, choose the large core")
-	help      = pflag.Bool("help", false, "Print help and exit")
+	minWin      = pflag.Uint("minWin", 50, "Minimum window size")
+	largeCore   = pflag.Bool("largeCore", false, "When a small and large core have equivalent metrics, choose the large core")
+	nCandidates = pflag.Uint("candidates", 3, "Number of best candidates to search with")
+	help        = pflag.Bool("help", false, "Print help and exit")
 )
 
 // Metric flags
@@ -86,7 +87,7 @@ func main() {
 	nex := nexus.Read(in)
 
 	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := utils.ValidateMinWin(nex.Alignment().Len(), *minWin); err != nil {
+	if err := utils.ValidateMinWin(nex.Alignment().Len(), int(*minWin)); err != nil {
 		ui.Errorf("Failed due to: %v", err)
 	}
 
@@ -153,7 +154,7 @@ func main() {
 		// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
 		// It should be the case that processing a UCE considers where the start and stop of the UCE are
 		// finding the best Window within that range
-		bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore)
+		bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore, *nCandidates)
 		if *cfg != "" {
 			for _, bestWindow := range bestWindows {
 				block := pfinder.ConfigBlock(

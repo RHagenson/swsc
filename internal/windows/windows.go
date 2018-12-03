@@ -31,6 +31,67 @@ func (w *Window) Stop() int {
 	return w[1]
 }
 
+type winWVals struct {
+	win      Window
+	sqerr    float64
+	variance float64
+}
+
+// GetBestN gets the best N windows for each metric.
+// Quality is determined by sum of square error of metric, variance, and user-preference for size of core.
+func GetBestN(mets map[metrics.Metric][]float64, wins []Window, stop int, largeCore bool, n uint) map[metrics.Metric][]Window {
+	// 1) Init necessary space
+	sses := make(map[metrics.Metric][]winWVals, len(mets))
+	for m := range mets {
+		sses[m] = make([]winWVals, len(wins))
+	}
+
+	// 2) Get SSE and variance values for each cell in array
+	for i, win := range wins {
+		for m, v := range getSses(mets, win) {
+			sses[m][i].win = win
+			sses[m][i].sqerr = v
+			sses[m][i].variance = winVariance(win, stop)
+		}
+	}
+
+	// 3) Sort by lowest sum of square errors, lowest variance, then user-preference for window size.
+	for m := range sses {
+		sort.SliceStable(sses[m], func(i, j int) bool {
+			return sses[m][i].sqerr < sses[m][j].sqerr
+		})
+		sort.SliceStable(sses[m], func(i, j int) bool {
+			return sses[m][i].variance < sses[m][j].variance
+		})
+		if largeCore {
+			sort.SliceStable(sses[m], func(i, j int) bool {
+				// Largest window first
+				wini := sses[m][i].win.Stop() - sses[m][i].win.Start()
+				winj := sses[m][j].win.Stop() - sses[m][j].win.Start()
+				return wini > winj
+			})
+		} else {
+			sort.SliceStable(sses[m], func(i, j int) bool {
+				// Smallest window first
+				wini := sses[m][i].win.Stop() - sses[m][i].win.Start()
+				winj := sses[m][j].win.Stop() - sses[m][j].win.Start()
+				return wini < winj
+			})
+		}
+	}
+
+	// 4) Pull out the best windows
+	out := make(map[metrics.Metric][]Window, len(mets))
+	for m := range sses {
+		out[m] = make([]Window, n)
+		for i := range out[m] {
+			out[m][i] = sses[m][i].win
+		}
+	}
+
+	return out
+}
+
 func GetBest(mets map[metrics.Metric][]float64, wins []Window, stop int, largeCore bool) map[metrics.Metric]Window {
 	// 1) Make an empty array
 	// rows = number of metrics
@@ -161,23 +222,38 @@ func ExtendCandidate(w Window, start, stop, minWin int) []Window {
 	return wins
 }
 
-func getMinVarWindow(windows []Window, stop int) Window {
+func getMinVarWindowN(n int, windows []Window, stop int) []Window {
 	var (
-		best                        = math.MaxFloat64
-		bestWindow                  Window
-		left, core, right, variance float64
+		bestWindow = make([]Window, n)
+		vars       = make([]struct {
+			w Window
+			v float64
+		}, len(windows))
 	)
-	for _, w := range windows {
-		left = float64(w.Start())
-		core = float64(w.Stop() - w.Start())
-		right = float64(stop - w.Stop())
-		variance = stat.Variance([]float64{left, core, right}, nil)
-		if variance < best {
-			best = variance
-			bestWindow = w
-		}
+	for i, w := range windows {
+		vars[i].w = w
+		vars[i].v = winVariance(w, stop)
 	}
+	sort.Slice(vars, func(i, j int) bool {
+		return vars[i].v < vars[i].v
+	})
+
+	for i := 0; i < n; i++ {
+		bestWindow[i] = vars[i].w
+	}
+
 	return bestWindow
+}
+
+func winVariance(w Window, stop int) float64 {
+	left := float64(w.Start())
+	core := float64(w.Stop() - w.Start())
+	right := float64(stop - w.Stop())
+	return stat.Variance([]float64{left, core, right}, nil)
+}
+
+func getMinVarWindow(windows []Window, stop int) Window {
+	return getMinVarWindowN(1, windows, stop)[0]
 }
 
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters

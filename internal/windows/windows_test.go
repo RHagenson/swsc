@@ -185,7 +185,7 @@ func TestGetBest(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		got := windows.GetBest(tc.metrics, tc.windows, tc.alnLen, tc.inVarSites, tc.largeCore)
+		got := windows.GetBest(tc.metrics, tc.windows, tc.alnLen, tc.largeCore)
 		for m, v := range tc.exp {
 			if got[m] != v {
 				t.Errorf("Got: %v, Expected: %v", got[m], v)

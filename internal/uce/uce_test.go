@@ -12,7 +12,7 @@ import (
 func TestProcessUce(t *testing.T) {
 	tt := []struct {
 		aln       nexus.Alignment
-		minWin    int
+		minWin    uint
 		chars     []byte
 		expWins   map[metrics.Metric]windows.Window
 		metVals   map[metrics.Metric][]float64
@@ -216,7 +216,7 @@ func TestProcessUce(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		gotWins := uce.ProcessUce(0, tc.aln.Len(), tc.metVals, tc.minWin, tc.chars, tc.largeCore)
+		gotWins := uce.ProcessUce(0, tc.aln.Len(), tc.metVals, tc.minWin, tc.chars, tc.largeCore, 3)
 		t.Run("Windows", func(t *testing.T) {
 			for m, got := range gotWins {
 				exp := tc.expWins[m]

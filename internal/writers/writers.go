@@ -48,7 +48,7 @@ func WriteOutput(f io.Writer, bestWindows map[metrics.Metric]windows.Window, met
 				strconv.Itoa(uceSites[i]),             // 2) UCE site position relative to center of alignment
 				strconv.Itoa(alnSites[i]),             // 3) UCE site position absolute
 				strconv.Itoa(window.Start()),          // 4) Best window for metric, start
-				strconv.Itoa(window.Stop() + 1),       // 5) Best window for metric, stop
+				strconv.Itoa(window.Stop()),           // 5) Best window for metric, stop
 				m.String(),                            // 6) Metric under analysis
 				strconv.FormatFloat(v[i], 'e', 5, 64), // 7) Metric value at site position
 				strconv.Itoa(relToWindow(window.Start(), i, window.Stop())), // 8) -1 if before window, 0 if in window, 1 if after window

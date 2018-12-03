@@ -82,7 +82,7 @@ func (m Metric) String() string {
 // 	return counts
 // }
 
-func SitewiseEntropy(aln nexus.Alignment, chars []byte) []float64 {
+func SitewiseEntropy(aln *nexus.Alignment, chars []byte) []float64 {
 	entropies := make([]float64, aln.Len())
 	for i := 0; i < aln.Len(); i++ {
 		site := aln.Subseq(i, i+1)
@@ -92,13 +92,13 @@ func SitewiseEntropy(aln nexus.Alignment, chars []byte) []float64 {
 }
 
 // SitewiseBaseCounts returns a 4xN array of base counts where N is the number of sites
-func SitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
+func SitewiseBaseCounts(aln *nexus.Alignment, letters []byte) map[byte][]int {
 	counts := make(map[byte][]int)
 	for _, l := range letters {
-		counts[l] = make([]int, uceAln.Len())
+		counts[l] = make([]int, aln.Len())
 	}
-	for i := 0; i < uceAln.Len(); i++ {
-		site := uceAln.Subseq(i, i+1)
+	for i := 0; i < aln.Len(); i++ {
+		site := aln.Subseq(i, i+1)
 		bCounts := site.Count(letters)
 		for k, v := range bCounts {
 			counts[k][i] += v
@@ -107,16 +107,16 @@ func SitewiseBaseCounts(uceAln nexus.Alignment, letters []byte) map[byte][]int {
 	return counts
 }
 
-func SitewiseGc(uceAln nexus.Alignment) []float64 {
-	gc := make([]float64, uceAln.Len())
+func SitewiseGc(aln *nexus.Alignment) []float64 {
+	gc := make([]float64, aln.Len())
 	for i := range gc {
-		site := strings.ToTitle(string(uceAln.Column(uint(i))))
+		site := strings.ToTitle(string(aln.Column(uint(i))))
 		for _, nuc := range site {
 			if nuc == 'G' || nuc == 'C' {
 				gc[i]++
 			}
 		}
-		gc[i] = gc[i] / float64(uceAln.NSeq())
+		gc[i] = gc[i] / float64(aln.NSeq())
 	}
 	return gc
 }

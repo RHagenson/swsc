@@ -134,7 +134,7 @@ func TestSitewiseEntropy(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		got := metrics.SitewiseEntropy(tc.aln, tc.chars)
+		got := metrics.SitewiseEntropy(&tc.aln, tc.chars)
 		t.Run("Length", func(t *testing.T) {
 			if len(got) != len(tc.exp) {
 				t.Errorf("Lengths do not match. Got %d, expected %d",
@@ -246,7 +246,7 @@ func TestSitewiseBaseCounts(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		got := metrics.SitewiseBaseCounts(tc.aln, tc.chars)
+		got := metrics.SitewiseBaseCounts(&tc.aln, tc.chars)
 		t.Run("Length", func(t *testing.T) {
 			if len(got) != len(tc.exp) {
 				t.Errorf("Lengths do not match. Got %d, expected %d",
@@ -366,7 +366,7 @@ func TestSitewiseGc(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		got := metrics.SitewiseGc(tc.aln)
+		got := metrics.SitewiseGc(&tc.aln)
 		t.Run("Length", func(t *testing.T) {
 			if len(got) != len(tc.exp) {
 				t.Errorf("Lengths do not match. Got %d, expected %d",

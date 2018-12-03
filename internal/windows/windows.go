@@ -258,10 +258,10 @@ func getMinVarWindow(windows []Window, stop int) Window {
 
 // anyUndeterminedBlocks checks if any blocks are only undetermined/ambiguous characters
 // Not the same as anyBlocksWoAllSites()
-func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
-	leftAln := uceAln.Subseq(-1, bestWindow.Start())
-	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
-	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
+func anyUndeterminedBlocks(bestWindow Window, aln *nexus.Alignment, chars []byte) bool {
+	leftAln := aln.Subseq(-1, bestWindow.Start())
+	coreAln := aln.Subseq(bestWindow.Start(), bestWindow.Stop())
+	rightAln := aln.Subseq(bestWindow.Stop(), -1)
 
 	leftFreq := leftAln.Frequency(chars)
 	coreFreq := coreAln.Frequency(chars)
@@ -277,10 +277,10 @@ func anyUndeterminedBlocks(bestWindow Window, uceAln nexus.Alignment, chars []by
 
 // anyBlocksWoAllSites checks for blocks with only undetermined/ambiguous characters
 // Not the same as anyUndeterminedBlocks()
-func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
-	leftAln := uceAln.Subseq(-1, bestWindow.Start())
-	coreAln := uceAln.Subseq(bestWindow.Start(), bestWindow.Stop())
-	rightAln := uceAln.Subseq(bestWindow.Stop(), -1)
+func anyBlocksWoAllSites(bestWindow Window, aln *nexus.Alignment, chars []byte) bool {
+	leftAln := aln.Subseq(-1, bestWindow.Start())
+	coreAln := aln.Subseq(bestWindow.Start(), bestWindow.Stop())
+	rightAln := aln.Subseq(bestWindow.Stop(), -1)
 
 	leftCounts := leftAln.Count(chars)
 	coreCounts := coreAln.Count(chars)
@@ -293,6 +293,6 @@ func anyBlocksWoAllSites(bestWindow Window, uceAln nexus.Alignment, chars []byte
 }
 
 // UseFullRange checks invariant conditions and returns if any are true
-func UseFullRange(bestWindow Window, uceAln nexus.Alignment, chars []byte) bool {
-	return anyBlocksWoAllSites(bestWindow, uceAln, chars) || anyUndeterminedBlocks(bestWindow, uceAln, chars)
+func UseFullRange(bestWindow Window, aln *nexus.Alignment, chars []byte) bool {
+	return anyBlocksWoAllSites(bestWindow, aln, chars) || anyUndeterminedBlocks(bestWindow, aln, chars)
 }

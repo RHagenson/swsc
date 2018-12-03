@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io"
 	"math"
@@ -133,43 +134,55 @@ func main() {
 	sort.Ints(keys) // Sort done in place
 
 	// Process each UCE in turn
-	pFinderConfigBlocks := make([]string, 0, len(uces))
+	pFinderConfigBlocks := make([]string, len(uces))
+	outputFrames := make([][][]string, len(uces))
+	sem := make(chan struct{}, len(uces))
+	uceNum := 0
 	for _, key := range keys {
-		name := revUCEs[key]
-		sites := uces[name]
-		var (
-			start = math.MaxInt16 // Minimum position in UCE
-			stop  = math.MinInt16 // Maximum position in UCE
-		)
-		// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
-		for _, pair := range sites {
-			if pair.First() < start {
-				start = pair.First()
+		go func(key, uceNum int) {
+			name := revUCEs[key]
+			sites := uces[name]
+			var (
+				start = math.MaxInt16 // Minimum position in UCE
+				stop  = math.MinInt16 // Maximum position in UCE
+			)
+			// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
+			for _, pair := range sites {
+				if pair.First() < start {
+					start = pair.First()
+				}
+				if stop < pair.Second() {
+					stop = pair.Second()
+				}
 			}
-			if stop < pair.Second() {
-				stop = pair.Second()
-			}
-		}
 
-		// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
-		// It should be the case that processing a UCE considers where the start and stop of the UCE are
-		// finding the best Window within that range
-		bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore, *nCandidates)
-		if *cfg != "" {
-			for _, bestWindow := range bestWindows {
-				block := pfinder.ConfigBlock(
-					name, bestWindow, start, stop-1,
-					windows.UseFullRange(bestWindow, aln, nex.Letters()),
-				)
-				pFinderConfigBlocks = append(pFinderConfigBlocks, block)
+			// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
+			// It should be the case that processing a UCE considers where the start and stop of the UCE are
+			// finding the best Window within that range
+			bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore, *nCandidates)
+			if *cfg != "" {
+				for _, bestWindow := range bestWindows {
+					block := pfinder.ConfigBlock(
+						name, bestWindow, start, stop-1,
+						windows.UseFullRange(bestWindow, aln, nex.Letters()),
+					)
+					pFinderConfigBlocks[uceNum] = block
+				}
 			}
-		}
-		alnSites := make([]int, stop-start)
-		for i := range alnSites {
-			alnSites[i] = i + start
-		}
-		writers.WriteOutput(out, bestWindows, metVals, alnSites, name)
-		bar.Increment()
+			alnSites := make([]int, stop-start)
+			for i := range alnSites {
+				alnSites[i] = i + start
+			}
+			frame := writers.Output(bestWindows, metVals, alnSites, name)
+			outputFrames[uceNum] = frame
+			sem <- struct{}{}
+
+			bar.Increment()
+		}(key, uceNum)
+		uceNum++
+	}
+	for i := 0; i < len(uces); i++ {
+		<-sem
 	}
 	bar.FinishPrint("Finished processing UCEs")
 
@@ -191,6 +204,13 @@ func main() {
 		block = pfinder.EndBlock()
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write PartitionFinder2 end block: %s", err)
+		}
+	}
+
+	outCsv := csv.NewWriter(out)
+	for _, s := range outputFrames {
+		if err := outCsv.WriteAll(s); err != nil {
+			ui.Errorf("Failed to write output: %v", err)
 		}
 	}
 

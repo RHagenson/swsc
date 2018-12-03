@@ -16,7 +16,7 @@ func ProcessUce(start, stop int, mets map[metrics.Metric][]float64, minWin int, 
 	canWins := windows.GenerateCandidates(start, stop, minWin)
 
 	// Determine the best candidate window
-	bestCanWins := windows.GetBest(mets, canWins, stop-start, inVars, largeCore)
+	bestCanWins := windows.GetBest(mets, canWins, stop, largeCore)
 
 	// Extend the best candidate and retest
 	var extWins []windows.Window

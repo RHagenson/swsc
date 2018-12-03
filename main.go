@@ -120,7 +120,7 @@ func main() {
 	keys := make([]int, 0, len(uces))
 	for name, sites := range uces {
 		var (
-			start = math.MaxInt16 // Minimum position in UCE
+			start = math.MaxInt64 // Minimum position in UCE
 		)
 		// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
 		for _, pair := range sites {

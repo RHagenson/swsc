@@ -91,7 +91,8 @@ A quick explanation of versions:
 + `v4.0.0`: Candidate windows plus extension, single reference alignment, and remove redundant calculations
 + `v5.0.0`: Multiple candidate windows plus extension and single reference alignment
 + `v5.1.0`: Same as `v5.0.0`, but done in parallel for each UCE
++ `v6.0.0`: Update CLI to allow Nexus or FASTA+UCE csv input
 
 Use `git checkout <version>` to move to a particular version (and `git checkout master` to move to the latest untagged development version). From there you can run either `go install` to install the particular version in `GOPATH` (overwritting any previous installed version) or `go build [-o <build name>]` to build the version in the current directory.
 
-Versions can give different results so I would recommend using `v1.0.0` if you want the absolute best result (and have the time to wait for it to run a long, long time) or `v5.1.0` with a realistic `-minWin` and `-candidates` settings (rule of thumb: `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the UCE).
+Versions can give different results so I would recommend using `v1.0.0` if you want the absolute best result (and have the time to wait for it to run a long, long time) or `v6.0.0` with a realistic `-minWin` and `-candidates` settings (rule of thumb: `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the UCE).

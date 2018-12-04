@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 
 	"bitbucket.org/rhagenson/swsc/internal/metrics"
@@ -18,55 +19,64 @@ import (
 	"bitbucket.org/rhagenson/swsc/internal/utils"
 	"bitbucket.org/rhagenson/swsc/internal/windows"
 	"bitbucket.org/rhagenson/swsc/internal/writers"
+	"github.com/shenwei356/bio/seq"
+	"github.com/shenwei356/bio/seqio/fastx"
 	"github.com/spf13/pflag"
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
 // Required flags
 var (
-	read  = pflag.String("input", "", "Nexus file to process (.nex)")
-	write = pflag.String("output", "", "Partition file to write (.csv)")
-	cfg   = pflag.String("cfg", "", "Config file for PartionFinder2 (.cfg)")
+	fNex    = pflag.String("nexus", "", "Nexus file to process (.nex)")
+	fFasta  = pflag.String("fasta", "", "Multi-FASTA file to process (.fna/fasta)")
+	fUces   = pflag.String("uces", "", "CSV file with UCE ranges, format: Name,Start,Stop (inclusive)")
+	fOutput = pflag.String("output", "", "Partition file to write (.csv)")
+	fCfg    = pflag.String("cfg", "", "Config file for PartionFinder2 (.cfg)")
 )
 
 // General use flags
 var (
-	minWin      = pflag.Uint("minWin", 50, "Minimum window size")
-	largeCore   = pflag.Bool("largeCore", false, "When a small and large core have equivalent metrics, choose the large core")
-	nCandidates = pflag.Uint("candidates", 3, "Number of best candidates to search with")
-	help        = pflag.Bool("help", false, "Print help and exit")
+	fMinWin      = pflag.Uint("minWin", 50, "Minimum window size")
+	fLargeCore   = pflag.Bool("largeCore", false, "When a small and large core have equivalent metrics, choose the large core")
+	fNCandidates = pflag.Uint("candidates", 3, "Number of best candidates to search with")
+	fHelp        = pflag.Bool("help", false, "Print help and exit")
 )
 
 // Metric flags
 var (
-	entropy = pflag.Bool("entropy", false, "Calculate Shannon's entropy metric")
-	gc      = pflag.Bool("gc", false, "Calculate GC content metric")
+	fEntropy = pflag.Bool("entropy", false, "Calculate Shannon's entropy metric")
+	fGc      = pflag.Bool("gc", false, "Calculate GC content metric")
 	// multi = pflag.Bool("multi", false, "Calculate multinomial distribution metric")
 )
 
 func setup() {
 	pflag.Parse()
-	if *help {
+	if *fHelp {
 		pflag.Usage()
 		os.Exit(1)
 	}
 
 	// Failure states
 	switch {
-	case *read == "" && *write == "":
+	case *fNex == "" && *fFasta == "" && *fUces == "":
 		pflag.Usage()
-		ui.Errorf("Must provide input and output names\n")
-	case !strings.HasSuffix(*read, ".nex"):
-		ui.Errorf("Input expected to end in .nex, got %s\n", path.Ext(*read))
-	case !strings.HasSuffix(*write, ".csv"):
-		ui.Errorf("Output expected to end in .csv, got %s\n", path.Ext(*write))
-	case !strings.HasSuffix(*cfg, ".cfg"):
-		ui.Errorf("Config file expected to end in .cfg, got %s\n", path.Ext(*cfg))
-	case *minWin < 0:
-		ui.Errorf("Window size must be positive, got %d\n", *minWin)
-	case *entropy == *gc && (*entropy || *gc):
+		ui.Errorf("Must provide either nexus, or fasta and uces\n")
+	case *fOutput == "":
+		pflag.Usage()
+		ui.Errorf("Must provide output\n")
+	case *fNex != "" && !strings.HasSuffix(*fNex, ".nex"):
+		ui.Errorf("Input expected to end in .nex, got %s\n", path.Ext(*fNex))
+	case *fFasta != "" && !(strings.HasSuffix(*fFasta, ".fna") || strings.HasSuffix(*fFasta, ".fasta")):
+		ui.Errorf("FASTA expected to end in .fna, got %s\n", path.Ext(*fFasta))
+	case *fUces != "" && !strings.HasSuffix(*fUces, ".csv"):
+		ui.Errorf("UCEs expected to end in .csv, got %s\n", path.Ext(*fUces))
+	case *fOutput != "" && !strings.HasSuffix(*fOutput, ".csv"):
+		ui.Errorf("Output expected to end in .csv, got %s\n", path.Ext(*fOutput))
+	case *fCfg != "" && !strings.HasSuffix(*fCfg, ".cfg"):
+		ui.Errorf("Config expected to end in .cfg, got %s\n", path.Ext(*fCfg))
+	case *fEntropy == *fGc && (*fEntropy || *fGc):
 		ui.Errorf("Only one metric is allowed\n")
-	case !(*entropy || *gc):
+	case !(*fEntropy || *fGc):
 		ui.Errorf("At least one metric is needed\n")
 	}
 }
@@ -75,24 +85,87 @@ func main() {
 	// Parse CLI arguments
 	setup()
 
-	// Inform user on STDOUT what is being done
-	fmt.Println(ui.Header(*read))
+	var (
+		aln     = new(nexus.Alignment)             // Sequence alignment
+		uces    = make(map[string][]nexus.Pair, 0) // UCE set
+		letters []byte                             // Valid letters in Alignment
+	)
 
-	in, err := os.Open(*read)
-	defer in.Close()
-	if err != nil {
-		ui.Errorf("Could not read input file: %s", err)
+	switch {
+	case *fNex != "": // Nexus input, all in one input
+		in, err := os.Open(*fNex)
+		defer in.Close()
+		if err != nil {
+			ui.Errorf("Could not read input file: %s", err)
+		}
+
+		// Read in the input Nexus file
+		nex := nexus.Read(in)
+		*aln = nex.Alignment()
+		uces = nex.Charsets()
+		letters = nex.Letters()
+	case *fFasta != "" && *fUces != "": // FASTA and UCE input,
+		fna, err := fastx.NewDefaultReader(*fFasta)
+		defer fna.Close()
+		if err != nil {
+			ui.Errorf("Could not read input file: %s", err)
+		}
+		seqs := make([]string, 0)
+		for {
+			record, err := fna.Read()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				ui.Errorf("Failed parsing FASTA: %v", err)
+			}
+			seqs = append(seqs, record.Seq.String())
+		}
+		*aln = nexus.Alignment(seqs)
+		letters = seq.DNA.Letters()
+
+		inUce, err := os.Open(*fUces)
+		defer inUce.Close()
+		if err != nil {
+			ui.Errorf("Could not read input file: %s", err)
+		}
+		uceCsv := csv.NewReader(inUce)
+		colMap := make(map[string]int, 3)
+		header, err := uceCsv.Read()
+		for i, col := range header {
+			switch col {
+			case "Name":
+				colMap["Name"] = i
+			case "Start":
+				colMap["Start"] = i
+			case "Stop":
+				colMap["Stop"] = i
+			default:
+				ui.Errorf("Did not understand column %q", col)
+			}
+		}
+		rows, err := uceCsv.ReadAll()
+		for _, row := range rows {
+			start, err := strconv.Atoi(row[colMap["Start"]])
+			if err != nil {
+				ui.Errorf("Failed to read Start in UCE row: %q", row)
+			}
+			stop, err := strconv.Atoi(row[colMap["Stop"]])
+			if err != nil {
+				ui.Errorf("Failed to read Stop in UCE row: %q", row)
+			}
+			uces[row[colMap["Name"]]] = append(uces[row[colMap["Name"]]],
+				nexus.NewPair(
+					start,
+					stop+1, // Inclusive range in file, while exclusive range used internally
+				),
+			)
+		}
+	default:
+		ui.Errorf("Did not understand how to read input")
 	}
 
-	// Read in the input Nexus file
-	nex := nexus.Read(in)
-
-	// Early panic if minWin has been set too large to create flanks and core of that length
-	if err := utils.ValidateMinWin(nex.Alignment().Len(), int(*minWin)); err != nil {
-		ui.Errorf("Failed due to: %v", err)
-	}
-
-	out, err := os.Create(*write)
+	out, err := os.Create(*fOutput)
 	defer out.Close()
 	if err != nil {
 		ui.Errorf("Could not create output file: %s", err)
@@ -101,17 +174,20 @@ func main() {
 	writers.WriteOutputHeader(out)
 
 	var (
-		aln     = nex.Alignment()        // Sequence alignment
-		uces    = nex.Charsets()         // UCE set
 		bar     = pb.StartNew(len(uces)) // Progress bar
 		metVals = make(map[metrics.Metric][]float64, 3)
 	)
 
-	if *entropy {
-		metVals[metrics.Entropy] = metrics.SitewiseEntropy(&aln, nex.Letters())
+	// Early panic if minWin has been set too large to create flanks and core of that length
+	if err := utils.ValidateMinWin(aln.Len(), int(*fMinWin)); err != nil {
+		ui.Errorf("Failed due to: %v", err)
 	}
-	if *gc {
-		metVals[metrics.GC] = metrics.SitewiseGc(&aln)
+
+	if *fEntropy {
+		metVals[metrics.Entropy] = metrics.SitewiseEntropy(aln, letters)
+	}
+	if *fGc {
+		metVals[metrics.GC] = metrics.SitewiseGc(aln)
 	}
 
 	// Sort UCEs
@@ -159,12 +235,12 @@ func main() {
 			// Currently uceAln is the subsequence while inVarSites and metVals the entire sequence
 			// It should be the case that processing a UCE considers where the start and stop of the UCE are
 			// finding the best Window within that range
-			bestWindows := uce.ProcessUce(start, stop, metVals, *minWin, nex.Letters(), *largeCore, *nCandidates)
-			if *cfg != "" {
+			bestWindows := uce.ProcessUce(start, stop, metVals, *fMinWin, letters, *fLargeCore, *fNCandidates)
+			if *fCfg != "" {
 				for _, bestWindow := range bestWindows {
 					block := pfinder.ConfigBlock(
 						name, bestWindow, start, stop-1,
-						windows.UseFullRange(bestWindow, &aln, nex.Letters()),
+						windows.UseFullRange(bestWindow, aln, letters),
 					)
 					pFinderConfigBlocks[uceNum] = block
 				}
@@ -186,13 +262,13 @@ func main() {
 	}
 	bar.FinishPrint("Finished processing UCEs")
 
-	if *cfg != "" {
-		pfinderFile, err := os.Create(*cfg)
+	if *fCfg != "" {
+		pfinderFile, err := os.Create(*fCfg)
 		defer pfinderFile.Close()
 		if err != nil {
 			ui.Errorf("Could not create PartitionFinder2 file: %s", err)
 		}
-		block := pfinder.StartBlock(strings.TrimRight(path.Base(*read), ".nex"))
+		block := pfinder.StartBlock(strings.TrimRight(path.Base(*fNex), ".nex"))
 		if _, err := io.WriteString(pfinderFile, block); err != nil {
 			ui.Errorf("Failed to write PartitionFinder2 start block: %s", err)
 		}
@@ -215,5 +291,5 @@ func main() {
 	}
 
 	// Inform user of where output was written
-	fmt.Println(ui.Footer(*write))
+	fmt.Println(ui.Footer(*fOutput))
 }

@@ -13,8 +13,8 @@ func (p *Pair) Second() int {
 	return p[1]
 }
 
-// newPair enforces that start is less than stop
-func newPair(start, stop int) Pair {
+// NewPair enforces that start is less than stop
+func NewPair(start, stop int) Pair {
 	if start < stop {
 		return Pair{start, stop}
 	} else {

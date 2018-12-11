@@ -7,7 +7,7 @@ import (
 // StartBlock writes PartitionFinder2 configuration header/start block
 func StartBlock(datasetName string) string {
 	branchLengths := "linked"
-	models := "GTR+G"
+	models := "mybayes"
 	modelSelection := "aicc"
 
 	block := "## ALIGNMENT FILE ##\n" +

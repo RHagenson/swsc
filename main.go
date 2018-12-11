@@ -219,8 +219,8 @@ func main() {
 			name := revUCEs[key]
 			sites := uces[name]
 			var (
-				start = math.MaxInt16 // Minimum position in UCE
-				stop  = math.MinInt16 // Maximum position in UCE
+				start = sites[0].First()  // Minimum position in UCE
+				stop  = sites[0].Second() // Maximum position in UCE
 			)
 			// Get the inclusive window for the UCE if multiple windows exist (which they should not, but can in the Nexus format)
 			for _, pair := range sites {

@@ -32,7 +32,7 @@ func WriteOutputHeader(f io.Writer) {
 func Output(bestWindows map[metrics.Metric]windows.Window, metricArray map[metrics.Metric][]float64, alnSites []int, name string) [][]string {
 	d := make([][]string, len(metricArray)*len(alnSites))
 	N := len(alnSites)
-	middle := int(math.Ceil(float64(N) / 2.0))
+	middle := int(math.Floor(float64(N) / 2.0))
 	uceSites := make([]int, N)
 	for i := range uceSites {
 		uceSites[i] = i - middle

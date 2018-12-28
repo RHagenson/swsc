@@ -7,14 +7,14 @@ import (
 // StartBlock writes PartitionFinder2 configuration header/start block
 func StartBlock(datasetName string) string {
 	branchLengths := "linked"
-	models := "mybayes"
+	models := "mrbayes"
 	modelSelection := "aicc"
 
 	block := "## ALIGNMENT FILE ##\n" +
 		fmt.Sprintf("alignment = %s.nex;\n\n", datasetName) +
 		"## BRANCHLENGTHS: linked | unlinked ##\n" +
 		fmt.Sprintf("branchlengths = %s;\n\n", branchLengths) +
-		"MODELS OF EVOLUTION: all | allx | mybayes | beast | gamma | gammai <list> ##\n" +
+		"## MODELS OF EVOLUTION: all | allx | mrbayes | beast | gamma | gammai <list> ##\n" +
 		fmt.Sprintf("models = %s;\n\n", models) +
 		"# MODEL SELECTION: AIC | AICc | BIC #\n" +
 		fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +

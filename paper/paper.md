@@ -18,7 +18,7 @@ bibliography: paper.bib
 
 # Summary
 
-Ultraconserved elements (UCEs) are regions of the genome that retain partial identity across a vast number of species. This identity retention makes UCEs especially useful for inferring otherwise intractable phylogenies. UCE partitioning acts to split a UCE into three parts: variable left flank, conserved core, and variable right flank. The heightened variation found in the flanks allows for phylogenetic inferences [@Crawford2012,@Baca2017,@Blaimer2016,@Faircloth2012,@Faircloth2013,@McCormack2012,@Smith2014,Harrington2016,Moyle2016].
+Ultraconserved elements (UCEs) are regions of the genome that retain partial identity across a vast number of species. This identity retention makes UCEs especially useful for inferring otherwise intractable phylogenies. UCE partitioning acts to split a UCE into three parts: variable left flank, conserved core, and variable right flank. The heightened variation found in the flanks allows for phylogenetic inferences [@Crawford2012, @Baca2017, @Blaimer2016, @Faircloth2012, @Faircloth2013, @McCormack2012, @Smith2014, @Harrington2016, @Moyle2016].
 
 Based on a method originally described by [@Tagliacollo2018] as Sliding-Window Site Characteristics (SWSC), `swsc` partitions UCEs based on chosen sitewise metrics such as Shannon's entropy or GC percentage. Input is either a modified Nexus file or standard FASTA+CSV files, containing the concatenated UCE sequences of individuals under analysis along with the range of each UCE in the concatenation (see `example-data/` in code repository for example formats). Output is a single CSV containing the UCE partitions. Optionally, a configuration file for`PartitionFinder2` can be produced.
 

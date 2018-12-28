@@ -1,3 +1,5 @@
+[![status](http://joss.theoj.org/papers/b01aa9474605d9516d710ae25b6b8168/status.svg)](http://joss.theoj.org/papers/b01aa9474605d9516d710ae25b6b8168)
+
 # swsc
 
 `swsc` implements the Sliding-Window Site Characteristics (SWSC) method as described in <https://doi.org/10.1093/molbev/msy069>

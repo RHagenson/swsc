@@ -17,14 +17,14 @@ If using this program as blackbox, here are a few things to consider about the i
 swsc consides three window types starting at `v5.0.0`:
 
 + Candidate windows (size of `minWin`)
-+ Extended candidate windows (size of `minWin*2`, extended `minWin/2` in both directions)
++ Extended candidate windows (size of `minWin*2` via extending `minWin/2` in both directions)
 + Window covering all candidates (size between `minWin*candidates` and UCE length)
 
 ### Change `minWin` and `candidates`
 
 The default settings for these values are provided as a rough guide to realistic values, but are not meant to be the values used for all runs.
 
-**For best results, `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the UCE.**
+**For best results, `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the smallest UCE.**
 
 ## Usage
 
@@ -38,7 +38,7 @@ The default settings for these values are provided as a rough guide to realistic
 
 ### Running
 
-Both `input`,`output`, and at least one metric (`--gc` or `--entropy`) must be set. See `swsc --help` for details.
+Both `input`,`output`, and one metric (`--gc` or `--entropy`) must be set. See `swsc --help` for details.
 
 ### Reporting Errors
 
@@ -51,7 +51,7 @@ If you have found an error, or this tools does not work for you, please create a
 1. `DATA`, containing the UCE markers (unique by ID)
 2. `SETS`, containing the UCE locations (unique by ID, with inclusive range)
 
-Example (any `...` denotes truncated content, see [PFinderUCE-SWSC-EN] for full file):
+Example (`...` denotes truncated content, see [PFinderUCE-SWSC-EN] for full file):
 
 ```text
 #NEXUS
@@ -81,7 +81,7 @@ END;
 
 ## Output
 
-`swsc` writes a single `.csv` file containing the chosen characteristics for each site of the UCEs. It can also produce a `.cfg` for use by PartitionFinder2 by using the appropriate flag.
+`swsc` writes a `.csv` file containing the chosen characteristic for each site of the UCEs. It can also produce a `.cfg` for use by PartitionFinder2 by using the appropriate flag (`--cfg`).
 
 ## Versions
 
@@ -95,6 +95,10 @@ A quick explanation of versions:
 + `v5.1.0`: Same as `v5.0.0`, but done in parallel for each UCE
 + `v6.1.0`: Update CLI to allow Nexus or FASTA+UCE csv input
 
-Use `git checkout <version>` to move to a particular version (and `git checkout master` to move to the latest untagged development version). From there you can run either `go install` to install the particular version in `GOPATH` (overwritting any previous installed version) or `go build [-o <build name>]` to build the version in the current directory.
+Use `git checkout <version>` to move to a particular version (and `git checkout master` to move to the latest untagged development version). From there you can run either `go install` to install the particular version in `GOPATH` (overwriting any previous installed version) or `go build [-o <build name>]` to build the version in the current directory.
 
-Versions can give different results so I would recommend using `v1.0.0` if you want the absolute best result (and have the time to wait for it to run a long, long time) or `v6.1.0` with a realistic `-minWin` and `-candidates` settings (rule of thumb: `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the smallest UCE).
+Versions can give different results so I would recommend using `v1.0.0` if you want the absolute best result (and have the time to wait for it to run a long, long time) or `v6.1.0` with a realistic `--minWin` and `--candidates` settings (rule of thumb: `minWin*candidates` should be roughly `1/3` of the smallest UCE, indicating candidates can span the full length of the smallest UCE).
+
+# License
+
+This work is licensed under the the Modified BSD License, see full terms of use in [LICENSE](./LICENSE) file.

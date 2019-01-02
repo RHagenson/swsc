@@ -10,7 +10,7 @@ import (
 
 func TestStartBlock(t *testing.T) {
 	branchLengths := "linked"
-	models := "GTR+G"
+	models := "mrbayes"
 	modelSelection := "aicc"
 	tt := []struct {
 		datasetName string
@@ -26,7 +26,7 @@ func TestStartBlock(t *testing.T) {
 			fmt.Sprintf("alignment = %s.nex;\n\n", tc.datasetName) +
 			"## BRANCHLENGTHS: linked | unlinked ##\n" +
 			fmt.Sprintf("branchlengths = %s;\n\n", branchLengths) +
-			"MODELS OF EVOLUTION: all | allx | mybayes | beast | gamma | gammai <list> ##\n" +
+			"## MODELS OF EVOLUTION: all | allx | mrbayes | beast | gamma | gammai <list> ##\n" +
 			fmt.Sprintf("models = %s;\n\n", models) +
 			"# MODEL SELECTION: AIC | AICc | BIC #\n" +
 			fmt.Sprintf("model_selection = %s;\n\n", modelSelection) +

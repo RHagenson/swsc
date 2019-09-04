@@ -32,10 +32,10 @@ The default settings for these values are provided as a rough guide to realistic
 ### Installation
 
 1. Install the Go language following instructions at: <https://golang.org/>
-2. Run `go get -u bitbucket.org/rhagenson/swsc/...`
+2. Run `go get -u github.com/rhagenson/swsc/...`
 3. Run `swsc` by either:
     + Calling it directly if you added`$GOPATH/bin/` to your `$PATH`
-    + Navigating to `$GOPATH/src/bitbucket.org/rhagenson/swsc/` and running `go build main.go && ./swsc`
+    + Navigating to `$GOPATH/src/github.com/rhagenson/swsc/` and running `go build main.go && ./swsc`
 
 ### Running
 
@@ -43,7 +43,7 @@ Both `input`,`output`, and one metric (`--gc` or `--entropy`) must be set. See `
 
 ### Reporting Errors
 
-If you have found an error, or this tools does not work for you, please create an issue at: <https://bitbucket.org/RHagenson/swsc/issues> with details on when the error occurred, what the error states, and what was expected to occur, if known.
+If you have found an error, or this tools does not work for you, please create an issue at: <https://github.com/RHagenson/swsc/issues> with details on when the error occurred, what the error states, and what was expected to occur, if known.
 
 ## Input
 

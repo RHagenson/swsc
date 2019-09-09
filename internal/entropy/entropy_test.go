@@ -3,7 +3,7 @@ package entropy_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/entropy"
+	"github.com/rhagenson/swsc/internal/entropy"
 	"gonum.org/v1/gonum/floats"
 )
 

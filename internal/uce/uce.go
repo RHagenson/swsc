@@ -3,8 +3,8 @@ package uce
 import (
 	"math"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/windows"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/windows"
 )
 
 // ProcessUce computes the corresponding metrics within the minimum window size,

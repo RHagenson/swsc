@@ -3,8 +3,8 @@ package metrics
 import (
 	"strings"
 
-	"bitbucket.org/rhagenson/swsc/internal/entropy"
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"github.com/rhagenson/swsc/internal/entropy"
+	"github.com/rhagenson/swsc/internal/nexus"
 )
 
 // Metric is an enum type denoting possible sitewise metrics to calculate

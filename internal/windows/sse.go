@@ -3,7 +3,7 @@ package windows
 import (
 	"math"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/metrics"
 	"gonum.org/v1/gonum/stat"
 )
 

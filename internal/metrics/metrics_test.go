@@ -3,8 +3,8 @@ package metrics_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/nexus"
 	"gonum.org/v1/gonum/floats"
 )
 

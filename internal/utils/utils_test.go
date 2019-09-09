@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/utils"
+	"github.com/rhagenson/swsc/internal/utils"
 	"github.com/pkg/errors"
 )
 

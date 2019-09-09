@@ -3,10 +3,10 @@ package uce_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
-	"bitbucket.org/rhagenson/swsc/internal/uce"
-	"bitbucket.org/rhagenson/swsc/internal/windows"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/nexus"
+	"github.com/rhagenson/swsc/internal/uce"
+	"github.com/rhagenson/swsc/internal/windows"
 )
 
 func TestProcessUce(t *testing.T) {

@@ -6,9 +6,9 @@ import (
 	"math"
 	"strconv"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/ui"
-	"bitbucket.org/rhagenson/swsc/internal/windows"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/ui"
+	"github.com/rhagenson/swsc/internal/windows"
 )
 
 // WriteOutputHeader truncates the *write file to only the header row

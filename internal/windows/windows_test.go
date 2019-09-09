@@ -3,8 +3,8 @@ package windows_test
 import (
 	"testing"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/windows"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/windows"
 )
 
 func TestGenerateWindows(t *testing.T) {

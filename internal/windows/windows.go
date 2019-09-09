@@ -4,9 +4,9 @@ import (
 	"math"
 	"sort"
 
-	"bitbucket.org/rhagenson/swsc/internal/metrics"
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
-	"bitbucket.org/rhagenson/swsc/internal/utils"
+	"github.com/rhagenson/swsc/internal/metrics"
+	"github.com/rhagenson/swsc/internal/nexus"
+	"github.com/rhagenson/swsc/internal/utils"
 	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/stat"
 )

@@ -3,7 +3,7 @@ package entropy
 import (
 	"math"
 
-	"bitbucket.org/rhagenson/swsc/internal/nexus"
+	"github.com/rhagenson/swsc/internal/nexus"
 	"gonum.org/v1/gonum/stat"
 )
 

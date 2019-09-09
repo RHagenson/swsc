@@ -46,7 +46,7 @@ where $N$ is the number of UCEs, $n_i = (UCE_{i,L} - m \times 3) + 1$, and $UCE_
 
 down to an upward bound of:
 
-$2 \sum_{i=1}^{i=N}{\lfloor \frac{UCE_{i,L}}{m}\rfloor} + C \frac{m(m+1)}{2} + 1$
+$2 \sum_{i=1}^{i=N}{\lfloor \frac{UCE_{i,L}}{m}\rfloor} + C \frac{m(m+1)}{2}$
 
 where $N$ is the number of UCEs, $UCE_{i,L}$ is the length of the $i$-th UCE, $m$ is the minimum window size, and $C$ is the number of best candidates to consider.
 
@@ -54,6 +54,6 @@ In the initial project `swsc` was built for this change equated to roughly a $10
 
 # Acknowledgements
 
-I acknowledge Cynthia L. Frasier, Timothy M. Sefszek, and Melissa T. R. Hawkins for their input on decisions made during development.
+I acknowledge Cynthia L. Frasier, Timothy M. Sefczek, and Melissa T. R. Hawkins for their input on decisions made during development.
 
 # References

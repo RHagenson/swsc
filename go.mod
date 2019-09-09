@@ -3,7 +3,6 @@ module github.com/rhagenson/swsc
 go 1.12
 
 require (
-	bitbucket.org/rhagenson/swsc v6.1.1+incompatible // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect
 	github.com/fatih/color v1.7.0 // indirect

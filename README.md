@@ -1,5 +1,5 @@
 [![status](http://joss.theoj.org/papers/b01aa9474605d9516d710ae25b6b8168/status.svg)](http://joss.theoj.org/papers/b01aa9474605d9516d710ae25b6b8168)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2542907.svg)](https://doi.org/10.5281/zenodo.2542907)
+[![DOI](https://zenodo.org/badge/166289238.svg)](https://zenodo.org/badge/latestdoi/166289238)
 
 # swsc
 

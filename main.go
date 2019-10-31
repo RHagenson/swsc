@@ -58,7 +58,7 @@ func setup() {
 
 	// Failure states
 	switch {
-	case *fNex == "" && *fFasta == "" && *fUces == "":
+	case (*fNex == "") != (*fFasta == "" && *fUces == ""):  // != used as XOR
 		pflag.Usage()
 		ui.Errorf("Must provide either nexus, or fasta and uces\n")
 	case *fOutput == "":

@@ -11,7 +11,7 @@ Sample data taken from: [PFinderUCE-SWSC-EN]
 
 ## Insight into Interworkings
 
-If using this program as blackbox, here are a few things to consider about the interworkings:
+If using this program as a blackbox, here are a few things to consider about the interworkings:
 
 ### swsc Window Types
 

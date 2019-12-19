@@ -1,0 +1,17 @@
+language: go
+sudo: false
+go:
+    - 1.x
+    - master
+env: GO111MODULE=on
+branches:
+  only:
+    - master
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $GOPATH/pkg/mod
+before_script:
+    - go get -t -v ./...
+    - go build 
+script: go test -v -cover -race ./...
